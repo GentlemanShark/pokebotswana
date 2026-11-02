@@ -24,7 +24,7 @@ BATTLE_SCREEN_DIALOGUE_BG_HEX = "#29526b"
 BATTLE_SCREEN_CAUGHT_BG_CROSSHAIR = (220, 130)
 BATTLE_SCREEN_CAUGHT_BG_HEX = "#29526b"
 
-EXCLUDED_POKEMON = ["CATERPIE", "PIDGEY", "WEEDLE", "SUICUNE", "KAKUNA"]
+EXCLUDED_POKEMON = ["CATERPIE", "PIDGEY", "WEEDLE", "SUICUNE", "KAKUNA", "METAPOD", "ODDISH"]
 # The number of shiny pokemon to catch before the bot stops
 CATCH_LIMIT = 4
 
@@ -37,6 +37,7 @@ encounter_counts = {
     "WEEDLE": 0,
     "SUICUNE": 0,
     "KAKUNA": 0,
+    "METAPOD": 0,
 }
 runs_lock = threading.Lock()
 pause_all = False
@@ -210,7 +211,7 @@ def attempt(slot: InstanceSlot):
         time.sleep(0.3)
         # Select MEAN LOOK (assumes it's in top-left position)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.7)
+        time.sleep(2)
 
     def use_false_swipe():
         slot.abort_if_frozen()
@@ -227,7 +228,7 @@ def attempt(slot: InstanceSlot):
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.DOWN))
         time.sleep(0.3)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.7)
+        time.sleep(2)
 
     def use_spore():
         slot.abort_if_frozen()
@@ -244,7 +245,7 @@ def attempt(slot: InstanceSlot):
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.RIGHT))
         time.sleep(0.3)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.7)
+        time.sleep(2)
 
     def throw_first_ultra_ball():
         slot.abort_if_frozen()
