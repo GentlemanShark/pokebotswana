@@ -10,14 +10,15 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
-from pkbt.config import MGBA_DEV, SERVER_SCRIPT, TEMP_DIR
+from pkbt.config import MGBA_DEV, MGBA_SDL, SERVER_SCRIPT, TEMP_DIR
+from pkbt.console import for_console
 from pkbt.emulator import EmulatorProc
 from pkbt.mgba_connection import MGBAConnection
 from pkbt.orchestrator import Orchestrator
 from pkbt.windowing import (
     Window,
     arrange_windows_auto_grid,
-    get_primary_screen_width,
+    get_monitor,
     hung_window_pids,
     minimize_windows_starting_with,
 )
@@ -112,18 +113,33 @@ class InstanceSlot:
                 print(f"[{idx}] Could not place the replacement window: {e}")
             minimize_windows_starting_with("Scripting")
             time.sleep(1)
-            try:
-                if new_window is not None and new_window.toggle_fast_forward():
-                    print(f"[{idx}] Toggled fast-forward on the replacement")
-                else:
-                    print(f"[{idx}] Could not focus the replacement to toggle fast-forward")
-            except Exception as e:
-                print(f"[{idx}] Could not toggle fast-forward: {e}")
+            if not self.group.sdl:
+                try:
+                    if new_window is not None and new_window.toggle_fast_forward():
+                        print(f"[{idx}] Toggled fast-forward on the replacement")
+                    else:
+                        print(f"[{idx}] Could not focus the replacement to toggle fast-forward")
+                except Exception as e:
+                    print(f"[{idx}] Could not toggle fast-forward: {e}")
+            if self.group.minimize and new_window is not None:
+                new_window.minimize()
+                minimize_windows_starting_with("Scripting")
             if not self.connect_with_retry():
                 print(f"[{idx}] Could not connect to the replacement on port {orch.client.port}")
                 return False
+            self._latch_fast_forward()
             print(f"[{idx}] Replacement is up on port {orch.client.port}")
             return True
+
+    def _latch_fast_forward(self) -> None:
+        """Ask server.lua to latch fast-forward. The SDL build has no Shift+Tab latch."""
+        if not self.group.fast_forward or not self.group.sdl:
+            return
+        try:
+            self.orch.client.set_fast_forward(True)
+            print(f"[{self.idx}] Fast-forward on")
+        except Exception as e:
+            print(f"[{self.idx}] Could not set fast-forward: {e}")
 
 
 class InstanceGroup:
@@ -143,6 +159,9 @@ class InstanceGroup:
         self.exe = exe
         self.script = script
         self.stale_seconds = stale_seconds
+        self.sdl = Path(exe).resolve() == Path(MGBA_SDL).resolve()
+        self.minimize = False
+        self.fast_forward = False
         self.stop = threading.Event()
         self.replace_lock = threading.Lock()
         self.slots: list[InstanceSlot] = []
@@ -184,8 +203,16 @@ class InstanceGroup:
                 except Exception:
                     pass
 
-    def start(self, ready_pause: float = 0, fast_forward: bool = False) -> None:
-        """Launch every emulator, tile the windows, and hide the Scripting consoles."""
+    def start(self, ready_pause: float = 0, fast_forward: bool = False, monitor: int = 0, minimize: bool = False) -> None:
+        """Launch every emulator, tile the windows, and hide the Scripting consoles.
+
+        monitor 0 is the primary display. 1 is the next display, and so on.
+        minimize puts each game window and its Scripting console away after
+        fast-forward. The Qt toggle has to focus the game window first.
+        The SDL build latches fast-forward over the socket once it is connected.
+        """
+        self.minimize = minimize
+        self.fast_forward = fast_forward
         print(f"Creating {len(self.slots)} orchestrators...", end="")
         print("done")
         for slot in self.slots:
@@ -198,14 +225,15 @@ class InstanceGroup:
             print("done")
 
         time.sleep(3)
-        print("Arranging windows...", end="")
+        left, top, width, _height = get_monitor(monitor)
+        print(f"Arranging windows on monitor {monitor}...", end="")
         windows = [Window.from_pid(slot.orch.emu.process.pid) for slot in self.slots]
-        arrange_windows_auto_grid(windows, max_width=get_primary_screen_width())
+        arrange_windows_auto_grid(windows, max_width=width, origin=(left, top))
         for slot, window in zip(self.slots, windows):
             slot.rect = window.rect()
         minimize_windows_starting_with("Scripting")
         print("done")
-        if fast_forward:
+        if fast_forward and not self.sdl:
             for slot, window in zip(self.slots, windows):
                 try:
                     if window.toggle_fast_forward():
@@ -214,6 +242,11 @@ class InstanceGroup:
                         print(f"[{slot.idx}] Could not focus the window to toggle fast-forward")
                 except Exception as e:
                     print(f"[{slot.idx}] Could not toggle fast-forward: {e}")
+        if minimize:
+            for window in windows:
+                window.minimize()
+            minimize_windows_starting_with("Scripting")
+            print("Minimized the game and Scripting windows")
         if ready_pause:
             time.sleep(ready_pause)
 
@@ -231,6 +264,8 @@ class InstanceGroup:
     def _run_slot(self, slot: InstanceSlot, attempt) -> None:
         if not slot.connect_with_retry():
             slot.restart.set()
+        else:
+            slot._latch_fast_forward()
         while not self.stop.is_set():
             if slot.restart.is_set():
                 if not slot.replace():
@@ -246,7 +281,7 @@ class InstanceGroup:
                     print(f"[{slot.idx}] Connection lost; replacing this instance")
                     slot.restart.set()
             except Exception as e:
-                print(f"[{slot.idx}] Error during run loop: {e}")
+                print(f"[{slot.idx}] Error during run loop: {for_console(e)}")
                 if slot.restart.is_set():
                     continue
                 if not slot.recover_connection():

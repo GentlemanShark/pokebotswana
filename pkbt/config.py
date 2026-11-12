@@ -14,6 +14,7 @@ INPUT_DISPLAY_SCRIPT = SCRIPTS_DIR / CONFIG["scripts"]["input_display"]
 
 """mGBA Emulator"""
 MGBA_DEV = CONFIG["emulator"]["mgba_dev"]
+MGBA_SDL = CONFIG["emulator"]["mgba_sdl"]
 
 """OCR"""
 TESSERACT = CONFIG["ocr"]["tesseract"]
