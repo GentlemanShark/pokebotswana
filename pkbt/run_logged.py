@@ -44,13 +44,23 @@ def main() -> int:
         assert proc.stdout is not None
         try:
             for line in proc.stdout:
-                sys.stdout.write(line)
+                sys.stdout.write(_clock(line))
                 sys.stdout.flush()
                 log.write(_stamp(line))
                 log.flush()
         finally:
             proc.stdout.close()
         return proc.wait()
+
+
+def _clock(line: str) -> str:
+    """Prefix a console line with the local time of day."""
+    if not line.strip():
+        return line
+    now = datetime.now().strftime("%H:%M:%S")
+    if line.endswith("\n"):
+        return f"{now} {line[:-1]}\n"
+    return f"{now} {line}"
 
 
 def _stamp(line: str) -> str:
