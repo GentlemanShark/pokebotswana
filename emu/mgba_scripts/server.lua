@@ -7,23 +7,16 @@
 	Basic host/client communication (see functions ST_*) is based loosely on mGBA test script(s) from official repo.
 ]]
 
-local state_manager = require("state_manager")
--- state_manager.initialize_state()
--- Python passes the port and slot. Falling back to the shared state file lets
--- two windows swap ports, and the restart then kills the neighbor.
+-- Python passes the port and slot. A launch with neither uses port 8888.
 local slot_id = os.getenv("PKBT_SLOT")
 local env_port = os.getenv("PKBT_PORT")
-local instance = nil
-if not env_port then
-	instance = state_manager.create_instance()
-	console:log("Created instance with port " .. instance.port .. " and timestamp " .. instance.timestamp)
-else
-	console:log("Using assigned port " .. env_port .. " for slot " .. tostring(slot_id))
-end
+local port = tonumber(env_port) or 8888
+console:log("Using port " .. port .. " for slot " .. tostring(slot_id))
 
 -- Frame counter for the host, named by the slot that launched this process.
 local heartbeat_frame = 0
-local heartbeat_path = slot_id and ("temp/frame_slot_" .. slot_id .. ".txt") or ("temp/frame_" .. instance.port .. ".txt")
+local slot_dir = slot_id and (".session/" .. slot_id) or ".session"
+local heartbeat_path = slot_id and (slot_dir .. "/frame_slot_" .. slot_id .. ".txt") or (".session/frame_" .. port .. ".txt")
 callbacks:add("frame", function()
 	heartbeat_frame = heartbeat_frame + 1
 	if heartbeat_frame % 120 ~= 0 then
@@ -85,8 +78,13 @@ end
 
 function PK_handle_screenshot(str)
 	local filename = string.sub(str, 2)
-	console:log("Taking screenshot to " .. filename)
-	emu:screenshot("temp/" .. filename)
+	-- A bare name is this slot's working shot. A path is written as given.
+	local path = filename
+	if not string.find(filename, "/", 1, true) and not string.find(filename, "\\", 1, true) then
+		path = slot_dir .. "/" .. filename
+	end
+	console:log("Taking screenshot to " .. path)
+	emu:screenshot(path)
 end
 --[[ end section Screenshot Utilities ]]
 
@@ -186,19 +184,14 @@ local function wait_seconds(seconds)
 	while os.clock() < deadline do end
 end
 
-local port = env_port and tonumber(env_port) or instance.port
-local fixed_port = env_port ~= nil
 server = nil
 local attempts = 0
-local max_attempts = fixed_port and 20 or 50
+local max_attempts = 20
 while not server and attempts < max_attempts do
 	attempts = attempts + 1
 	server, err = socket.bind(nil, port)
 	if err then
-		if err == socket.ERRORS.ADDRESS_IN_USE and not fixed_port then
-			port = port + 1
-			server = nil
-		elseif err == socket.ERRORS.ADDRESS_IN_USE then
+		if err == socket.ERRORS.ADDRESS_IN_USE then
 			server = nil
 			console:log("Port " .. port .. " is still in use, retrying")
 			wait_seconds(0.25)

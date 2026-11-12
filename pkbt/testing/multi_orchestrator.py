@@ -5,7 +5,6 @@ from pkbt.config import POKEMON_RED_ROM, SERVER_SCRIPT, MGBA_DEV, INPUT_DISPLAY_
 from pkbt.input.key_event import KeyEvent
 from pkbt.input.key_event_type import KeyEventType
 from pkbt.input.key_type import KeyType
-from pkbt.state_manager import initialize_state_manager
 import time
 import threading
 from typing import Callable
@@ -25,7 +24,6 @@ def task(o: Orchestrator, idx: int):
 
 
 """Putting it all together and running it"""
-initialize_state_manager()
 
 # Create the orchestrators
 orchestrators = []

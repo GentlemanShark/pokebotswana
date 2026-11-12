@@ -11,11 +11,9 @@ from pkbt.config import POKEMON_RED_ROM
 from pkbt.input.key_event import KeyEventType
 from pkbt.input.key_type import KeyType
 from pkbt.input.key_event import KeyEvent
-from pkbt.state_manager import initialize_state_manager
-from pkbt.config import TEMP_DIR
-from pkbt.image_processing import pixel_hex
+from pkbt.image_processing import pixel_hex, debug_shot
 from pkbt.audio import play_success
-from pkbt.instances import InstanceGroup, InstanceSlot
+from pkbt.instances import InstanceGroup, InstanceSlot, slot_dir
 import time
 import threading
 import random
@@ -116,7 +114,7 @@ def attempt(slot: InstanceSlot):
         time.sleep(1)
 
     def shiny_star_is_visible() -> bool:
-        return SHINY_STAR_HEX == pixel_hex(f"{TEMP_DIR}/{idx}.png", CROSSHAIR[0], CROSSHAIR[1])
+        return SHINY_STAR_HEX == pixel_hex(slot_dir(idx) / f"{idx}.png", CROSSHAIR[0], CROSSHAIR[1])
 
     def save_game():
         slot.abort_if_frozen()
@@ -153,12 +151,12 @@ def attempt(slot: InstanceSlot):
     if shiny_star_is_visible():
         group.stop.set()
         print(f"Shiny found on {idx}")
-        o.client.save_screenshot_to_file(f"found-at-runs-{current_runs}.png")
+        _, lua_name = debug_shot(f"found-at-runs-{current_runs}.png")
+        o.client.save_screenshot_to_file(lua_name)
         play_success(blocking=True)
         save_game()
 
 """Putting it all together and running it"""
-initialize_state_manager()
 group = InstanceGroup(NUM_INSTANCES, POKEMON_RED_ROM, starting_port=STARTING_PORT)
 # Time to Shift+Tab the original windows. Replacements toggle it themselves.
 group.start(ready_pause=12)

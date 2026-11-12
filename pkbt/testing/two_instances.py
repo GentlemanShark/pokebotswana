@@ -7,8 +7,7 @@ from pkbt.image_processing import save_with_crosshair, pixel_rgb, pixel_hex
 import threading
 from pkbt.input.key_event import KeyEvent
 from pkbt.input.key_event_type import KeyEventType
-from pkbt.config import POKEMON_EMERALD_ROM, SERVER_SCRIPT, MGBA_DEV, TEMP_DIR
-from pkbt.state_manager import initialize_state_manager
+from pkbt.config import POKEMON_EMERALD_ROM, SERVER_SCRIPT, MGBA_DEV, SESSION_DIR
 from pkbt.emulator import EmulatorProc
 from pkbt.orchestrator import Orchestrator
 
@@ -130,8 +129,8 @@ def client_thread_fn(idx, process: subprocess.Popen, client: MGBAConnection):
             time.sleep(2.5)
             total_count += 1
             print(f"Total count: {total_count}")
-            if blueish_hex != pixel_hex(f"{TEMP_DIR}/{idx}foo.png", crosshair_x, crosshair_y) and pixel_hex(f"{TEMP_DIR}/{idx}foo.png", crosshair_x, crosshair_y) not in acceptable_mistakes:
-                print(f"Found on {idx} with color {pixel_hex(f"{TEMP_DIR}/{idx}foo.png", crosshair_x, crosshair_y)}")
+            if blueish_hex != pixel_hex(f"{SESSION_DIR}/{idx}foo.png", crosshair_x, crosshair_y) and pixel_hex(f"{SESSION_DIR}/{idx}foo.png", crosshair_x, crosshair_y) not in acceptable_mistakes:
+                print(f"Found on {idx} with color {pixel_hex(f"{SESSION_DIR}/{idx}foo.png", crosshair_x, crosshair_y)}")
                 found = True
 
         # for i in range(30):
@@ -158,7 +157,6 @@ def client_thread_fn(idx, process: subprocess.Popen, client: MGBAConnection):
 
 if __name__ == "__main__":
     
-    initialize_state_manager()
     processes = start_processes(8)
     clients = start_clients(processes)
 
@@ -190,8 +188,8 @@ if __name__ == "__main__":
     # crosshair_x = 40
     # crosshair_y = 53
 
-    # save_with_crosshair(f"{TEMP_DIR}/foo.png", f"{TEMP_DIR}/foo_with_crosshair.png", crosshair_x, crosshair_y)
-    # print(pixel_rgb(f"{TEMP_DIR}/foo.png", crosshair_x , crosshair_y))
-    # print(pixel_hex(f"{TEMP_DIR}/foo.png", crosshair_x, crosshair_y))
+    # save_with_crosshair(f"{SESSION_DIR}/foo.png", f"{SESSION_DIR}/foo_with_crosshair.png", crosshair_x, crosshair_y)
+    # print(pixel_rgb(f"{SESSION_DIR}/foo.png", crosshair_x , crosshair_y))
+    # print(pixel_hex(f"{SESSION_DIR}/foo.png", crosshair_x, crosshair_y))
 
     # time.sleep(2)
