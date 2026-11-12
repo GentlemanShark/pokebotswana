@@ -8,8 +8,9 @@ class SpriteCheck:
 
 @dataclass(frozen=True)
 class Species:
-    wild: SpriteCheck
+    wild: SpriteCheck | None = None
     summary: SpriteCheck | None = None
+    other_names: list[str] | None = None
 
 SPECIES = {
     "ABRA": Species(
@@ -70,6 +71,12 @@ SPECIES = {
         wild=SpriteCheck(
             crosshair=(182, 45),
             normal_hex="#c65ace"
+        )
+    ),
+    "CUBONE": Species(
+        wild=SpriteCheck(
+            crosshair=(183, 68),
+            normal_hex="#946b31"
         )
     ),
     "DEWGONG": Species(
@@ -172,7 +179,8 @@ SPECIES = {
         wild=SpriteCheck(
             crosshair=(176, 43),
             normal_hex="#7b7bb5"
-        )
+        ),
+        other_names=["GOLDUC☃("]
     ),
     "GRIMER": Species(
         wild=SpriteCheck(
@@ -282,6 +290,16 @@ SPECIES = {
             normal_hex="#ffef94"
         )
     ),
+    "LARVITAR": Species(
+        wild=SpriteCheck(
+            crosshair=(176, 50),
+            normal_hex="#b5deb5"
+        ),
+        summary=SpriteCheck(
+            crosshair=(59, 66),
+            normal_hex="#b5deb5"
+        )
+    ),
     "MACHAMP": Species(
         wild=SpriteCheck(
             crosshair=(183, 38),
@@ -292,7 +310,8 @@ SPECIES = {
         wild=SpriteCheck(
             crosshair=(187, 44),
             normal_hex="#ada5d6"
-        )
+        ),
+        other_names=["MACHO♦(E"]
     ),
     "MACHOP": Species(
         wild=SpriteCheck(
@@ -328,7 +347,8 @@ SPECIES = {
         wild=SpriteCheck(
             crosshair=(187, 52),
             normal_hex="#a57331"
-        )
+        ),
+        other_names=["MAROWA♦("]
     ),
     "MEOWTH": Species(
         wild=SpriteCheck(
@@ -386,8 +406,8 @@ SPECIES = {
     ),
     "ONIX": Species(
         wild=SpriteCheck(
-            crosshair=(187, 33),
-            normal_hex="#efe7e7"
+            crosshair=(174, 47),
+            normal_hex="#ded6d6"
         )
     ),
     "PARAS": Species(
@@ -444,6 +464,12 @@ SPECIES = {
             normal_hex="#ffe721"
         )
     ),
+    "PORYGON": Species(
+        summary=SpriteCheck(
+            crosshair=(66, 53),
+            normal_hex="#ffc6a5"
+        )
+    ),
     "PRIMEAPE": Species(
         wild=SpriteCheck(
             crosshair=(177, 55),
@@ -454,6 +480,13 @@ SPECIES = {
         wild=SpriteCheck(
             crosshair=(182, 54),
             normal_hex="#e7a531"
+        ),
+        other_names=["PSYDUC☃("]
+    ),
+    "RAPIDASH": Species(
+        wild=SpriteCheck(
+            crosshair=(195, 16),
+            normal_hex="#ffe721"
         )
     ),
     "RATICATE": Species(
@@ -478,6 +511,17 @@ SPECIES = {
         wild=SpriteCheck(
             crosshair=(174, 45),
             normal_hex="#73ad42"
+        ),
+        summary=SpriteCheck(
+            crosshair=(71, 57),
+            normal_hex="#9cde4a",
+            shiny_hex="#63bd31"
+        )
+    ),
+    "SKARMORY": Species(
+        wild=SpriteCheck(
+            crosshair=(171, 43),
+            normal_hex="#c6c6ce"
         )
     ),
     "SEEL": Species(
