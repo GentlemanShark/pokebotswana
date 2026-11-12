@@ -2,6 +2,7 @@
 
 [emulator]
 mgba_dev = "mgba_dev/mGBA.exe"
+mgba_sdl = "mgba_sdl/mgba-sdl.exe"
 
 [ocr]
 tesseract = "C:/Program Files/Tesseract-OCR/tesseract.exe"

@@ -90,6 +90,25 @@ function PK_handle_screenshot(str)
 end
 --[[ end section Screenshot Utilities ]]
 
+--[[ begin section Fast Forward Utilities ]]
+local PK_FAST_FORWARD_CTRL_CHAR = "\x04"
+function PK_is_fast_forward_cmd(str)
+	return string.sub(str, 1, 1) == PK_FAST_FORWARD_CTRL_CHAR
+end
+
+function PK_handle_fast_forward(str)
+	local enable = string.sub(str, 2, 2) ~= "0"
+	local ok, err = pcall(function()
+		emu:setFastForward(enable)
+	end)
+	if ok then
+		console:log(enable and "Fast forward on" or "Fast forward off")
+	else
+		console:error("Fast forward is not available in this mGBA build: " .. tostring(err))
+	end
+end
+--[[ end section Fast Forward Utilities ]]
+
 --[[ begin section Repurposed mGBA Example Scripts Code ]]
 server = nil
 ST_sockets = {}
@@ -140,6 +159,8 @@ function ST_received(id)
                 PK_handle_reset()
             elseif PK_is_screenshot_cmd(line) then
                 PK_handle_screenshot(line)
+            elseif PK_is_fast_forward_cmd(line) then
+                PK_handle_fast_forward(line)
             end
         end
     end

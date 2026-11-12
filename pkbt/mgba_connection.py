@@ -10,6 +10,7 @@ from pkbt.input.key_state import KeyState
 """Control characters for other non-key state messages"""
 RESET_CTRL_CHAR = "\x02"
 SCREENSHOT_CTRL_CHAR = "\x03"
+FAST_FORWARD_CTRL_CHAR = "\x04"
 
 class MGBAConnection:
 
@@ -173,6 +174,10 @@ class MGBAConnection:
     def save_screenshot_to_file(self, filename: str):
         """Take a screenshot and save it to a file"""
         self.send(SCREENSHOT_CTRL_CHAR + filename + "\n")
+
+    def set_fast_forward(self, enabled: bool) -> None:
+        """Latch fast forward on or off. The SDL build applies fastForwardRatio from its config."""
+        self.send(FAST_FORWARD_CTRL_CHAR + ("1" if enabled else "0") + "\n")
 
     def __enter__(self):
         """Context manager entry"""

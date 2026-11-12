@@ -2,6 +2,8 @@ from pathlib import Path
 import os
 import subprocess
 
+from pkbt.config import MGBA_SDL
+
 class EmulatorProc:
 
     def __init__(self, exe: Path, rom: Path, scripts: list[Path] | None = None) -> None:
@@ -13,16 +15,19 @@ class EmulatorProc:
         """Starts the emulator with (optionally) the given scripts."""
         scripting_args = []
         for s in self.scripts or []:
-            scripting_args.extend(["--script", str(s)])
+            scripting_args.extend(["--script", Path(s).as_posix()])
 
         env = os.environ.copy()
         if extra_env:
             env.update(extra_env)
-        p = subprocess.Popen([
-            str(self.exe),
-            *scripting_args,
-            str(self.rom)
-        ], env=env)
+        rom = Path(self.rom)
+        launch = [Path(self.exe).as_posix(), *scripting_args]
+        # The ROM path is the one from config.toml. Its directory is where
+        # the matching .sav lives, so SDL does not use its own config for that.
+        if Path(self.exe).resolve() == Path(MGBA_SDL).resolve():
+            launch.extend(["-C", f"savegamePath={rom.parent.as_posix()}"])
+        launch.append(rom.as_posix())
+        p = subprocess.Popen(launch, env=env)
 
         if p is None:
             print("Failed to start emulator")

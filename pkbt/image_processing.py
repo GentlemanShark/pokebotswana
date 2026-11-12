@@ -3,6 +3,9 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
+from pkbt.config import TEMP_DIR
+from pkbt.instances import InstanceSlot
+
 def pixel_rgb(path, x, y):
     im = Image.open(path).convert("RGB")  # 3 channels, no alpha
     return im.getpixel((x, y))            # Normal: (x, y)
@@ -50,6 +53,37 @@ def pixel_hex_when_ready(path, x, y, take_screenshot, timeout=2.0):
         except (OSError, ValueError):
             time.sleep(0.05)
     raise TimeoutError(f"Screenshot {path.name} was not saved")
+
+def get_pixel_hex(slot: InstanceSlot, xy: tuple[int, int], timeout=2.0) -> str:
+    """Save this slot's screenshot and return the hex color at xy.
+
+    xy is (x, y) on a 240x160 frame. The file is temp/<slot>.png.
+    """
+    x, y = xy
+    filename = f"{slot.idx}.png"
+    return pixel_hex_when_ready(
+        TEMP_DIR / filename,
+        x,
+        y,
+        lambda: slot.orch.client.save_screenshot_to_file(filename),
+        timeout,
+    )
+
+def assert_hex_at_position(slot: InstanceSlot, xy: tuple[int, int], hex: str, timeout=2.0) -> bool:
+    """Return True if the hex color at xy is equal to the given hex.
+
+    xy is (x, y) on a 240x160 frame. The file is temp/<slot>.png.
+    """
+    pixel_hex = get_pixel_hex(slot, xy, timeout)
+    if pixel_hex != hex:
+        raise Exception(f'Failed {assert_hex_at_position.__name__}. Pixel color at {xy} is {pixel_hex} instead of {hex}')
+
+def assert_not_hex_at_position(slot: InstanceSlot, xy: tuple[int, int], hex: str, timeout=2.0) -> bool:
+    """Assert that the hex color at xy is not equal to the given hex.
+    """
+    pixel_hex = get_pixel_hex(slot, xy, timeout)
+    if pixel_hex == hex:
+        raise Exception(f'Failed {assert_not_hex_at_position.__name__}. Pixel color at {xy} is {pixel_hex} instead of not {hex}')
 
 def save_with_crosshair(src_path, out_path, x, y):
     # Load image as RGB

@@ -229,6 +229,24 @@ def get_primary_screen_size() -> tuple[int, int]:
 def get_primary_screen_width() -> int:
     return get_primary_screen_size()[0]
 
+def get_monitors() -> list[tuple[int, int, int, int]]:
+    """(left, top, width, height) for each display. Index 0 is the primary monitor."""
+    monitors = []
+    for handle, _, _rect in win32api.EnumDisplayMonitors():
+        info = win32api.GetMonitorInfo(handle)
+        left, top, right, bottom = info["Monitor"]
+        primary = bool(info["Flags"] & win32con.MONITORINFOF_PRIMARY)
+        monitors.append((primary, left, top, right - left, bottom - top))
+    monitors.sort(key=lambda monitor: (not monitor[0], monitor[1], monitor[2]))
+    return [(left, top, width, height) for _primary, left, top, width, height in monitors]
+
+def get_monitor(index: int = 0) -> tuple[int, int, int, int]:
+    """The display at index. 0 is the primary monitor."""
+    monitors = get_monitors()
+    if index < 0 or index >= len(monitors):
+        raise ValueError(f"Monitor {index} is not connected. {len(monitors)} displays were found.")
+    return monitors[index]
+
 def get_primary_screen_height() -> int:
     return get_primary_screen_size()[1]
 
@@ -252,26 +270,30 @@ def arrange_in_grid(windows: list["Window"], num_cols: int, num_rows: int) -> No
         row = i // num_cols
         w.move(col * w.width(), row * w.height())
 
-def arrange_windows_auto_grid(windows: list["Window"], max_width: int) -> None:
-    """Arrange windows left to right, top to bottom, wrapping when they don't fit."""
+def arrange_windows_auto_grid(windows: list["Window"], max_width: int, origin: tuple[int, int] = (0, 0)) -> None:
+    """Arrange windows left to right, top to bottom, wrapping when they don't fit.
+
+    origin is the top-left of the display. (0, 0) is the primary monitor.
+    """
     if not windows:
         return
-    
-    current_x = 0
-    current_y = 0
+
+    origin_x, origin_y = origin
+    current_x = origin_x
+    current_y = origin_y
     row_height = 0
-    
+
     for w in windows:
         # Check if this window fits on the current row
-        if current_x + w.width() > max_width and current_x > 0:
+        if current_x + w.width() > origin_x + max_width and current_x > origin_x:
             # Move to next row
-            current_x = 0
+            current_x = origin_x
             current_y += row_height
             row_height = 0
-        
+
         # Position the window
         w.move(current_x, current_y)
-        
+
         # Update position for next window
         current_x += w.width()
         row_height = max(row_height, w.height())
@@ -307,3 +329,9 @@ class Window:
 
     def toggle_fast_forward(self) -> bool:
         return toggle_fast_forward(self.hwnd)
+
+    def minimize(self) -> None:
+        """Minimize without waiting. A Not Responding window would block ShowWindow."""
+        if not win32gui.IsWindow(self.hwnd) or _is_hung(self.hwnd):
+            return
+        _show_async(self.hwnd, win32con.SW_MINIMIZE)
