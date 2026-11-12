@@ -23,7 +23,10 @@ Note: although nondevelopment builds <i>do</i> seem to have the UI option for Lu
 
 ```
 pokebotswana/
-├── mgba_scripts/              # Lua scripts used with mGBA API
+├── emu/
+│    ├── mgba_dev/             # Development build of mGBA
+│    ├── mgba_sdl/             # SDL build of mGBA
+│    └── mgba_scripts/         # Lua scripts used with mGBA API
 ├── pkbt/                      # Python client
 ├── resources/
 │    └── audio/          # Used for "Success" sound alert, if you want it.
@@ -35,7 +38,7 @@ pokebotswana/
 ### 1. Setup mGBA
 
 1. Download a [development build of mGBA](https://mgba.io/downloads.html#development-downloads) (strongly recommended) or compile your own.
-2. I recommend creating `mgba_dev/` in the repo root which contains your dev build (namely the executable).
+2. I recommend creating `emu/mgba_dev/` which contains your dev build (namely the executable).
 
 ### 2. Get Pokemon
 
@@ -43,7 +46,7 @@ No Pokemon roms are included, but I'm sure you can manage. I would keep them (an
 
 Disclaimer for Emerald: unlike other gen 3 titles, Emerald soft resets to the same RNG seed every time, regardless of the save clock. For this reason, I would avoid using it unless you are deliberately manipulating its RNG, or implementing measures (like waiting a variable amount of time between repeated actions) to ensure randomness when doing brute-force things like soft-resetting for shiny hunts. I mostly use Fire Red or Sapphire and bypass this.
 
-### 3. Update `config.toml` with correct ROM and executable paths
+### 3. Update `config.toml` with correct ROM paths
 
 This may not be necessary if you follow my advised project structure in Step 1.
 

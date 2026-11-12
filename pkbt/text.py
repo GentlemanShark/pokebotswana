@@ -1,7 +1,7 @@
 """Read Pokemon dialogue from a GBA screenshot.
 
 Uses the pkmngba_en training file with Tesseract's legacy engine. The file
-belongs in the tessdata directory from config.
+belongs in resources/tesseract.
 """
 
 import time
