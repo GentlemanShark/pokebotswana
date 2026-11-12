@@ -4,7 +4,12 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 from pkbt.config import TEMP_DIR
-from pkbt.instances import InstanceSlot
+from pkbt.instances import InstanceSlot, slot_dir
+
+def debug_shot(filename: str) -> tuple[Path, str]:
+    """A keep-a-picture screenshot in <repo>/temp. Lua writes the relative path."""
+    TEMP_DIR.mkdir(parents=True, exist_ok=True)
+    return TEMP_DIR / filename, f"temp/{filename}"
 
 def pixel_rgb(path, x, y):
     im = Image.open(path).convert("RGB")  # 3 channels, no alpha
@@ -57,12 +62,12 @@ def pixel_hex_when_ready(path, x, y, take_screenshot, timeout=2.0):
 def get_pixel_hex(slot: InstanceSlot, xy: tuple[int, int], timeout=2.0) -> str:
     """Save this slot's screenshot and return the hex color at xy.
 
-    xy is (x, y) on a 240x160 frame. The file is temp/<slot>.png.
+    xy is (x, y) on a 240x160 frame. The file is .session/<slot>/<slot>.png.
     """
     x, y = xy
     filename = f"{slot.idx}.png"
     return pixel_hex_when_ready(
-        TEMP_DIR / filename,
+        slot_dir(slot.idx) / filename,
         x,
         y,
         lambda: slot.orch.client.save_screenshot_to_file(filename),
@@ -72,7 +77,7 @@ def get_pixel_hex(slot: InstanceSlot, xy: tuple[int, int], timeout=2.0) -> str:
 def assert_hex_at_position(slot: InstanceSlot, xy: tuple[int, int], hex: str, timeout=2.0) -> bool:
     """Return True if the hex color at xy is equal to the given hex.
 
-    xy is (x, y) on a 240x160 frame. The file is temp/<slot>.png.
+    xy is (x, y) on a 240x160 frame. The file is .session/<slot>/<slot>.png.
     """
     pixel_hex = get_pixel_hex(slot, xy, timeout)
     if pixel_hex != hex:

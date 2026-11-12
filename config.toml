@@ -1,4 +1,8 @@
-# Set paths here for bot to function
+# Required:
+#    1. Install Tesseract OCR and specify a full path
+#    2. Specify a full path for any ROMs you intend to use
+#
+# I've left my own paths as examples
 
 [ocr]
 tesseract = "C:/Program Files/Tesseract-OCR/tesseract.exe"
@@ -9,7 +13,7 @@ pokemon_sapphire = "C:/Users/Josh/repos/pokebotswana/roms/Pokemon - Sapphire Ver
 pokemon_emerald = "C:/Users/Josh/repos/pokebotswana/roms/Pokemon - Emerald Version (U).zip"
 
 
-# Tweak defaults if desired
+# Default bot setting(s), configurable but best left alone
 
 [input]
 default_push_time = 0.05

@@ -10,12 +10,11 @@ from pkbt.orchestrator import Orchestrator
 from pkbt.input.key_event import KeyEventType
 from pkbt.input.key_type import KeyType
 from pkbt.input.key_event import KeyEvent
-from pkbt.state_manager import initialize_state_manager
 from pkbt.emulator import EmulatorProc
 from pkbt.mgba_connection import MGBAConnection
-from pkbt.config import MGBA_DEV, SERVER_SCRIPT, TEMP_DIR
+from pkbt.config import MGBA_DEV, SERVER_SCRIPT, SESSION_DIR
 # from pkbt.windowing import Window, arrange_windows_auto_grid, minimize_windows_starting_with, get_primary_screen_width
-from pkbt.image_processing import pixel_hex, save_with_crosshair
+from pkbt.image_processing import pixel_hex, save_with_crosshair, debug_shot
 from pkbt.audio import play_success
 import time
 import threading
@@ -131,7 +130,7 @@ def task(o: Orchestrator, idx: int):
         time.sleep(1)
 
     def shiny_star_is_visible() -> bool:
-        return SHINY_STAR_HEX == pixel_hex(f"{TEMP_DIR}/{idx}.png", CROSSHAIR[0], CROSSHAIR[1])
+        return SHINY_STAR_HEX == pixel_hex(f"{SESSION_DIR}/{idx}.png", CROSSHAIR[0], CROSSHAIR[1])
 
     def save_game():
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.B))
@@ -175,13 +174,13 @@ def task(o: Orchestrator, idx: int):
         if shiny_star_is_visible():
             found_shiny = True
             print(f"Shiny found on {idx}")
-            o.client.save_screenshot_to_file(f"found-at-runs-{runs}.png")
+            _, lua_name = debug_shot(f"found-at-runs-{runs}.png")
+            o.client.save_screenshot_to_file(lua_name)
             play_success(blocking=True)
             save_game()
             break
 
 """Putting it all together and running it"""
-initialize_state_manager()
 
 # Create the orchestrators
 orchestrators = []

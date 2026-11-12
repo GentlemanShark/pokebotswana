@@ -9,9 +9,9 @@ import time
 import pytesseract
 from PIL import Image, ImageOps
 
-from pkbt.config import TEMP_DIR, TESSDATA_DIR, TESSERACT
+from pkbt.config import TESSDATA_DIR, TESSERACT
 from pkbt.console import for_console
-from pkbt.instances import InstanceSlot
+from pkbt.instances import InstanceSlot, slot_dir
 
 pytesseract.pytesseract.tesseract_cmd = TESSERACT
 LANG = "pkmngba_en"
@@ -33,11 +33,11 @@ PLAYER_PKMN_STATUS_BOX = (142, 96, 162, 107)
 def read_overworld_dialogue(slot: InstanceSlot, timeout=2.0) -> str:
     """Save this slot's screenshot and read the overworld message window.
 
-    The file is temp/<slot>.png. Any PNG already there is removed first, and
+    The file is .session/<slot>/<slot>.png. Any PNG already there is removed first, and
     this waits until a readable image replaces it.
     """
     filename = f"{slot.idx}.png"
-    path = TEMP_DIR / filename
+    path = slot_dir(slot.idx) / filename
     try:
         path.unlink()
     except OSError:

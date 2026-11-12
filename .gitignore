@@ -24,7 +24,8 @@ emu/mgba_dev/*
 *.pyzw
 *.pyzwz
 
-# PKBT session data generated at runtime
+# PKBT session data
+.session/
 temp/
 logs/
 

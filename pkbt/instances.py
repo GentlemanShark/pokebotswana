@@ -10,7 +10,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
-from pkbt.config import MGBA_DEV, MGBA_SDL, SERVER_SCRIPT, TEMP_DIR
+from pkbt.config import MGBA_DEV, MGBA_SDL, SERVER_SCRIPT, SESSION_DIR
 from pkbt.console import for_console
 from pkbt.emulator import EmulatorProc
 from pkbt.mgba_connection import MGBAConnection
@@ -94,6 +94,7 @@ class InstanceSlot:
             except Exception:
                 pass
             time.sleep(0.5)
+            slot_dir(idx)
             try:
                 _frame_path(idx).unlink()
             except OSError:
@@ -216,6 +217,7 @@ class InstanceGroup:
         print(f"Creating {len(self.slots)} orchestrators...", end="")
         print("done")
         for slot in self.slots:
+            slot_dir(slot.idx)
             print(f"Starting emulator {slot.idx}...", end="")
             slot.orch.perform_task(
                 lambda e, c, slot_idx=slot.idx, port=self.starting_port + slot.idx: (
@@ -329,12 +331,19 @@ class InstanceGroup:
                     pass
 
 
+def slot_dir(slot_idx: int) -> Path:
+    """This instance's files: .session/<slot>/<slot>.png and frame_slot_<slot>.txt."""
+    path = SESSION_DIR / str(slot_idx)
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
 def _slot_env(slot_idx: int, port: int) -> dict[str, str]:
     return {"PKBT_SLOT": str(slot_idx), "PKBT_PORT": str(port)}
 
 
 def _frame_path(slot_idx: int):
-    return TEMP_DIR / f"frame_slot_{slot_idx}.txt"
+    return slot_dir(slot_idx) / f"frame_slot_{slot_idx}.txt"
 
 
 def _read_frame(slot_idx: int) -> int | None:

@@ -25,9 +25,11 @@ POKEMON_RED_ROM = Path(CONFIG["roms"]["pokemon_red"])
 POKEMON_SAPPHIRE_ROM = Path(CONFIG["roms"]["pokemon_sapphire"])
 POKEMON_EMERALD_ROM = Path(CONFIG["roms"]["pokemon_emerald"])
 
-"""Runtime"""
+"""Session"""
+SESSION_DIR = REPO_ROOT / ".session"
+
+"""Debugging screenshots"""
 TEMP_DIR = REPO_ROOT / "temp"
-STATE_MANAGER = TEMP_DIR / "pkbt_app_state.json"
 
 """Input"""
 DEFAULT_PUSH_TIME = CONFIG["input"]["default_push_time"]

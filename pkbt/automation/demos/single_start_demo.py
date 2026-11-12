@@ -10,16 +10,12 @@ from pkbt.orchestrator import Orchestrator
 from pkbt.input.key_event import KeyEventType
 from pkbt.input.key_type import KeyType
 from pkbt.input.key_event import KeyEvent
-from pkbt.state_manager import initialize_state_manager
 from pkbt.emulator import EmulatorProc
 from pkbt.mgba_connection import MGBAConnection
 import time
 
 
 """Running the demo"""
-
-# Initialize runtime data (required at the start of the program)
-initialize_state_manager()
 
 # Create orchestrator for managing client/host and performing automation.
 # INPUT_DISPLAY_SCRIPT is optional, but useful for seeing the input events in real-time (see center-top of game view).

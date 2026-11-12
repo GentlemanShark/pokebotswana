@@ -2,12 +2,10 @@ from pkbt.config import POKEMON_RED_ROM
 from pkbt.input.key_event import KeyEventType
 from pkbt.input.key_type import KeyType
 from pkbt.input.key_event import KeyEvent
-from pkbt.state_manager import initialize_state_manager
-from pkbt.config import TEMP_DIR
-from pkbt.image_processing import pixel_hex_when_ready, dialogue_arrow_is_visible
+from pkbt.image_processing import pixel_hex_when_ready, dialogue_arrow_is_visible, debug_shot
 from pkbt.text import FULL_DIALOGUE_BOX, PLAYER_PKMN_STATUS_BOX, read_text
 from pkbt.audio import play_success
-from pkbt.instances import InstanceGroup, InstanceSlot
+from pkbt.instances import InstanceGroup, InstanceSlot, slot_dir
 from pkbt.species import SPECIES
 from pkbt.console import for_console
 import time
@@ -118,7 +116,7 @@ def attempt(slot: InstanceSlot):
     def capture_pixel(x: int, y: int) -> str:
         slot.abort_if_frozen()
         return pixel_hex_when_ready(
-            TEMP_DIR / f"{idx}.png",
+            slot_dir(idx) / f"{idx}.png",
             x,
             y,
             lambda: o.client.save_screenshot_to_file(f"{idx}.png"),
@@ -127,7 +125,7 @@ def attempt(slot: InstanceSlot):
     def dialogue_arrow_is_visible_on_screen():
         slot.abort_if_frozen()
         return dialogue_arrow_is_visible(
-            TEMP_DIR / f"{idx}.png",
+            slot_dir(idx) / f"{idx}.png",
             lambda: o.client.save_screenshot_to_file(f"{idx}.png"),
         )
 
@@ -138,7 +136,7 @@ def attempt(slot: InstanceSlot):
 
     def get_wild_pokemon_name():
         slot.abort_if_frozen()
-        path = TEMP_DIR / f"{idx}.png"
+        path = slot_dir(idx) / f"{idx}.png"
         capture_pixel(FULL_DIALOGUE_BOX[0], FULL_DIALOGUE_BOX[1])
         text = "".join(read_text(path, FULL_DIALOGUE_BOX).split()).upper()
         prefix = "WILD"
@@ -153,11 +151,12 @@ def attempt(slot: InstanceSlot):
             shown_name = for_console(pokemon_name).strip() or "UNKNOWN"
             filename = "".join(c if c not in '<>:"/\\|?*' else "_" for c in shown_name) + ".png"
             print(f"[{idx}] Unrecognized pokemon name: {shown_name}")
+            path, lua_name = debug_shot(filename)
             pixel_hex_when_ready(
-                TEMP_DIR / filename,
+                path,
                 0,
                 0,
-                lambda: o.client.save_screenshot_to_file(filename),
+                lambda: o.client.save_screenshot_to_file(lua_name),
             )
             encounter_counts["UNKNOWN"] += 1
         else:
@@ -169,7 +168,7 @@ def attempt(slot: InstanceSlot):
 
     def is_player_pkmn_poisoned():
         slot.abort_if_frozen()
-        text = read_text(TEMP_DIR / f"{idx}.png", PLAYER_PKMN_STATUS_BOX).upper()
+        text = read_text(slot_dir(idx) / f"{idx}.png", PLAYER_PKMN_STATUS_BOX).upper()
         return text.startswith("PS")
 
     def is_shiny_of_species(pokemon_name: str):
@@ -373,7 +372,6 @@ def attempt(slot: InstanceSlot):
                 break
 
 """Putting it all together and running it"""
-initialize_state_manager()
 group = InstanceGroup(NUM_INSTANCES, POKEMON_RED_ROM, starting_port=STARTING_PORT)
 group.start(fast_forward=True)
 group.run(attempt)

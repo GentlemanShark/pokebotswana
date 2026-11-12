@@ -2,7 +2,6 @@ from pkbt.config import MGBA_SDL, POKEMON_RED_ROM
 from pkbt.input.key_event import KeyEventType
 from pkbt.input.key_type import KeyType
 from pkbt.input.key_event import KeyEvent
-from pkbt.state_manager import initialize_state_manager
 from pkbt.image_processing import get_pixel_hex, assert_hex_at_position, assert_not_hex_at_position
 from pkbt.text import read_overworld_dialogue, assert_equals_dialogue_text, assert_contains_dialogue_text
 from pkbt.audio import play_success
@@ -351,7 +350,6 @@ def attempt(slot: InstanceSlot):
         log_egg_report()
 
 """Putting it all together and running it"""
-initialize_state_manager()
 group = InstanceGroup(NUM_INSTANCES, POKEMON_RED_ROM, starting_port=STARTING_PORT, exe=MGBA_SDL)
 group.start(fast_forward=True, minimize=True)
 group.run(attempt)
