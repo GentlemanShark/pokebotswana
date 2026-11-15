@@ -51,20 +51,37 @@ def read_overworld_dialogue(slot: InstanceSlot, timeout=2.0) -> str:
             time.sleep(0.05)
     raise TimeoutError(f"Screenshot {path.name} was not saved")
 
-def assert_equals_dialogue_text(slot: InstanceSlot, text: str, timeout=2.0):
-    """Assert that the dialogue text is equal to the given text.
+def capture_screenshot_and_read_text(slot: InstanceSlot, box: tuple[int, int, int, int], timeout=2.0) -> str:
+    """Capture a screenshot, read the text inside the given rectangle, and return it.
+    """
+    filename = f"{slot.idx}.png"
+    path = slot_dir(slot.idx) / filename
+    try:
+        path.unlink()
+    except OSError:
+        pass
+    slot.orch.client.save_screenshot_to_file(filename)
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        try:
+            return read_text(path, box)
+        except (OSError, ValueError):
+            time.sleep(0.05)
+    raise TimeoutError(f"Screenshot {path.name} was not saved")
+
+def assert_equals_dialogue_text(slot: InstanceSlot, text: str, timeout=2.0) -> None:
+    """Raise if the dialogue text is not equal to the given text.
     """
     dialogue_text = read_overworld_dialogue(slot, timeout)
     if dialogue_text != text:
         raise Exception(f'Failed {assert_equals_dialogue_text.__name__}. Dialogue text is "{for_console(dialogue_text)}" instead of expected "{for_console(text)}"')
 
-def assert_contains_dialogue_text(slot: InstanceSlot, text: str, timeout=2.0):
-    """Assert that the dialogue text contains the given text.
+def assert_contains_dialogue_text(slot: InstanceSlot, text: str, timeout=2.0) -> None:
+    """Raise if the dialogue text does not contain the given text.
     """
     dialogue_text = read_overworld_dialogue(slot, timeout)
     if text not in dialogue_text:
         raise Exception(f'Failed {assert_contains_dialogue_text.__name__}. Dialogue text is "{for_console(dialogue_text)}" instead of expected "{for_console(text)}"')
-    return dialogue_text
 
 def read_text(source, box: tuple[int, int, int, int]) -> str:
     """Return the text inside box. source is an image or a path to one."""
@@ -95,3 +112,10 @@ def _prepare(image: Image.Image, box: tuple[int, int, int, int]) -> Image.Image:
             Image.Resampling.BILINEAR,
         )
     return image
+
+def assert_on_continue_screen(slot: InstanceSlot, timeout=2.0) -> None:
+    """Raise if the player is not on the continue screen.
+    """
+    continue_text = capture_screenshot_and_read_text(slot, [23, 12, 76, 22], timeout)
+    if continue_text != "CONTINUE":
+        raise Exception(f'Failed {assert_on_continue_screen.__name__}. CONTINUE text is "{for_console(continue_text)}" instead of expected "CONTINUE"')

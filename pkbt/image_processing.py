@@ -5,6 +5,7 @@ from PIL import Image, ImageDraw
 
 from pkbt.config import TEMP_DIR
 from pkbt.instances import InstanceSlot, slot_dir
+from pkbt.species import SpriteCheck
 
 def debug_shot(filename: str) -> tuple[Path, str]:
     """A keep-a-picture screenshot in <repo>/temp. Lua writes the relative path."""
@@ -74,8 +75,13 @@ def get_pixel_hex(slot: InstanceSlot, xy: tuple[int, int], timeout=2.0) -> str:
         timeout,
     )
 
-def assert_hex_at_position(slot: InstanceSlot, xy: tuple[int, int], hex: str, timeout=2.0) -> bool:
-    """Return True if the hex color at xy is equal to the given hex.
+def summary_sprite_is_shiny(slot: InstanceSlot, summary: SpriteCheck, timeout=2.0) -> bool:
+    """Return True when the summary sprite's crosshair pixel is not its normal color."""
+    pixel_hex = get_pixel_hex(slot, summary.crosshair, timeout)
+    return pixel_hex != summary.normal_hex
+
+def assert_hex_at_position(slot: InstanceSlot, xy: tuple[int, int], hex: str, timeout=2.0) -> None:
+    """Raise if the hex color at xy is not the given hex.
 
     xy is (x, y) on a 240x160 frame. The file is .session/<slot>/<slot>.png.
     """
@@ -83,8 +89,8 @@ def assert_hex_at_position(slot: InstanceSlot, xy: tuple[int, int], hex: str, ti
     if pixel_hex != hex:
         raise Exception(f'Failed {assert_hex_at_position.__name__}. Pixel color at {xy} is {pixel_hex} instead of {hex}')
 
-def assert_not_hex_at_position(slot: InstanceSlot, xy: tuple[int, int], hex: str, timeout=2.0) -> bool:
-    """Assert that the hex color at xy is not equal to the given hex.
+def assert_not_hex_at_position(slot: InstanceSlot, xy: tuple[int, int], hex: str, timeout=2.0) -> None:
+    """Raise if the hex color at xy is the given hex.
     """
     pixel_hex = get_pixel_hex(slot, xy, timeout)
     if pixel_hex == hex:
