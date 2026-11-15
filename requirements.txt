@@ -1,4 +1,4 @@
 pygame>=2.0.0
-pywin32>=306; sys_platform == "win32"
+pywin32>=306
 Pillow>=10.0.0
 pytesseract>=0.3.13

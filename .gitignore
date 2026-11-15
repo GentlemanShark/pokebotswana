@@ -35,7 +35,3 @@ venv312/
 env/
 .venv/
 .env/
-
-# macOS system files
-.DS_Store
-**/.DS_Store
