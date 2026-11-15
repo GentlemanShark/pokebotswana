@@ -37,3 +37,6 @@ DEFAULT_PUSH_TIME = CONFIG["input"]["default_push_time"]
 """Audio"""
 AUDIO_DIR = REPO_ROOT / "resources" / "audio"
 SUCCESS_AUDIO = AUDIO_DIR / "success.wav"
+
+"""Logs"""
+LOGS_DIR = REPO_ROOT / "logs"
