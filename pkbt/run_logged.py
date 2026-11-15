@@ -1,5 +1,6 @@
 """Run a Python command and copy its console output into logs/."""
 
+import os
 import re
 import shlex
 import subprocess
@@ -38,6 +39,8 @@ def main() -> int:
     with log_path.open("w", encoding="utf-8", newline="\n") as log:
         log.write(f"python {shlex.join(args)}\n")
         log.flush()
+        env = os.environ.copy()
+        env["PKBT_RUN_DIR"] = str(run_dir)
         proc = subprocess.Popen(
             [sys.executable, "-u", *args],
             stdout=subprocess.PIPE,
@@ -46,6 +49,7 @@ def main() -> int:
             encoding="utf-8",
             errors="replace",
             bufsize=1,
+            env=env,
         )
         assert proc.stdout is not None
         try:
