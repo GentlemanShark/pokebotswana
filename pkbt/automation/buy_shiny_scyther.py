@@ -1,12 +1,12 @@
-from pkbt.config import MGBA_SDL, POKEMON_RED_ROM
-from pkbt.input.key_event import KeyEventType
-from pkbt.input.key_type import KeyType
+from pkbt.config import POKEMON_RED_ROM, MGBA_SDL
 from pkbt.input.key_event import KeyEvent
-from pkbt.image_processing import pixel_hex_when_ready, dialogue_arrow_is_visible, debug_shot
-from pkbt.text import FULL_DIALOGUE_BOX, PLAYER_PKMN_STATUS_BOX, read_text
+from pkbt.input.key_event_type import KeyEventType
+from pkbt.input.key_type import KeyType
+from pkbt.screen.image_processing import pixel_hex_when_ready, dialogue_arrow_is_visible, debug_shot
+from pkbt.screen.text import FULL_DIALOGUE_BOX, PLAYER_PKMN_STATUS_BOX, read_text
 from pkbt.audio import play_success
-from pkbt.instances import InstanceGroup, InstanceSlot, slot_dir
-from pkbt.species import SPECIES
+from pkbt.session.instances import InstanceGroup, InstanceSlot, slot_dir
+from pkbt.screen.species import SPECIES
 from pkbt.console import for_console
 import time
 import threading
@@ -17,30 +17,19 @@ from datetime import datetime
 STARTING_PORT = 8888 # Leave me alone
 
 """Tweak as desired"""
-NUM_INSTANCES = 30
+NUM_INSTANCES =30
 BATTLE_SCREEN_DIALOGUE_BG_CROSSHAIR = (220, 146)
 BATTLE_SCREEN_DIALOGUE_BG_HEX = "#29526b"
 BATTLE_SCREEN_CAUGHT_BG_CROSSHAIR = (220, 130)
 BATTLE_SCREEN_CAUGHT_BG_HEX = "#29526b"
 
-EXCLUDED_POKEMON = ["FEAROW", "MEOWTH", "PERSIAN", "GEODUDE", "PHANPY", "CUBONE", "MAROWAK", "LARVITAR", "ONIX"]
+EXCLUDED_POKEMON = []
 # The number of shiny pokemon to catch before the bot stops
 CATCH_LIMIT = 3
-# Added to every fixed sleep. The reset delay stays a random range.
-SLEEP_DELTA = 0.0
 
 """Shared thread-safe variables"""
 encounter_counts = {
-    "SKARMORY": 0,
-    "CUBONE": 0,
-    "MAROWAK": 0,
-    "FEAROW": 0,
-    "LARVITAR": 0,
-    "ONIX": 0,
-    "MEOWTH": 0,
-    "PERSIAN": 0,
-    "GEODUDE": 0,
-    "PHANPY": 0,
+    "SCYTHER": 0,
 }
 runs_lock = threading.Lock()
 pause_all = False
@@ -63,64 +52,62 @@ def attempt(slot: InstanceSlot):
         time.sleep(random.uniform(0.7, 2.5))
         for _ in range(8):
             o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-            time.sleep(0.7 + SLEEP_DELTA)
-        time.sleep(2 + SLEEP_DELTA)
+            time.sleep(0.7)
+        time.sleep(2)
 
     def set_initial_menu_cursor_position():
         slot.abort_if_frozen()
         # Open the BAG menu
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.START))
-        time.sleep(0.2 + SLEEP_DELTA)
+        time.sleep(0.2)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.DOWN))
-        time.sleep(0.2 + SLEEP_DELTA)
+        time.sleep(0.2)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.DOWN))
-        time.sleep(0.2 + SLEEP_DELTA)
+        time.sleep(0.2)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.2 + SLEEP_DELTA)
+        time.sleep(0.2)
         # Move To FULL HEAL
         for _ in range(4):
             o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.DOWN))
-            time.sleep(0.2 + SLEEP_DELTA)
+            time.sleep(0.2)
         # Move to POKE BALLS
         for _ in range(2):
             o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.RIGHT))
-            time.sleep(0.2 + SLEEP_DELTA)
+            time.sleep(0.2)
         # Move to ULTRA BALL
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.DOWN))
-        time.sleep(0.2 + SLEEP_DELTA)
+        time.sleep(0.2)
         # Return to ITEMS tab
         for _ in range(2):
             o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.LEFT))
-            time.sleep(0.2 + SLEEP_DELTA)
+            time.sleep(0.2)
         # Return to main menu
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.B))
-        time.sleep(0.2 + SLEEP_DELTA)
+        time.sleep(0.2)
         # Move Cursor back to POKEDEX
         for _ in range(2):
             o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.UP))
-            time.sleep(0.2 + SLEEP_DELTA)
+            time.sleep(0.2)
         # Close start menu
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.B))
-        time.sleep(0.2 + SLEEP_DELTA)
+        time.sleep(0.2)
 
     def equip_bike():
         slot.abort_if_frozen()
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.SELECT))
-        time.sleep(0.7 + SLEEP_DELTA)
+        time.sleep(0.7)
 
     def brief_zigzag():
         slot.abort_if_frozen()
-        o.client.execute_event(KeyEvent(KeyEventType.HOLD, KeyType.B))
         for _ in range(1):
-            o.client.execute_event(KeyEvent(KeyEventType.HOLD, KeyType.RIGHT))
-            time.sleep(0.2 + SLEEP_DELTA)
-            o.client.execute_event(KeyEvent(KeyEventType.RELEASE, KeyType.RIGHT))
-            time.sleep(0.03 + SLEEP_DELTA)
-            o.client.execute_event(KeyEvent(KeyEventType.HOLD, KeyType.LEFT))
-            time.sleep(0.2 + SLEEP_DELTA)
-            o.client.execute_event(KeyEvent(KeyEventType.RELEASE, KeyType.LEFT))
-            time.sleep(0.03 + SLEEP_DELTA)
-        o.client.execute_event(KeyEvent(KeyEventType.RELEASE, KeyType.B))
+            o.client.execute_event(KeyEvent(KeyEventType.HOLD, KeyType.UP))
+            time.sleep(0.2)
+            o.client.execute_event(KeyEvent(KeyEventType.RELEASE, KeyType.UP))
+            time.sleep(0.03)
+            o.client.execute_event(KeyEvent(KeyEventType.HOLD, KeyType.DOWN))
+            time.sleep(0.2)
+            o.client.execute_event(KeyEvent(KeyEventType.RELEASE, KeyType.DOWN))
+            time.sleep(0.03)
 
     def capture_pixel(x: int, y: int) -> str:
         slot.abort_if_frozen()
@@ -191,11 +178,11 @@ def attempt(slot: InstanceSlot):
     def is_shiny_of_species(pokemon_name: str):
         slot.abort_if_frozen()
         species = SPECIES[pokemon_name]
-        pokemon_hex = capture_pixel(species.wild.crosshair[0], species.wild.crosshair[1])
-        is_shiny = pokemon_hex != species.wild.normal_hex
+        pokemon_hex = capture_pixel(species.summary.crosshair[0], species.summary.crosshair[1])
+        is_shiny = pokemon_hex == species.summary.shiny_hex
         if is_shiny:
             stamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S.%f")[:-3]
-            filename = f"shiny-{pokemon_name}-{idx}-{stamp}.png"
+            filename = f"shiny-scyther-{idx}-{stamp}.png"
             path, lua_name = debug_shot(filename)
             pixel_hex_when_ready(
                 path,
@@ -209,94 +196,94 @@ def attempt(slot: InstanceSlot):
     def proceed_through_battle_intro_messages():
         slot.abort_if_frozen()
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(1.2 + SLEEP_DELTA)
+        time.sleep(1.2)
 
     def run_away_from_battle():
         slot.abort_if_frozen()
-        time.sleep(0.1 + SLEEP_DELTA)
+        time.sleep(0.1)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.DOWN))
-        time.sleep(0.1 + SLEEP_DELTA)
+        time.sleep(0.1)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.RIGHT))
-        time.sleep(0.1 + SLEEP_DELTA)
+        time.sleep(0.1)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.1 + SLEEP_DELTA)
+        time.sleep(0.1)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.1 + SLEEP_DELTA)
+        time.sleep(0.1)
 
     def use_mean_look():
         slot.abort_if_frozen()
-        time.sleep(0.7 + SLEEP_DELTA)
+        time.sleep(0.7)
         # Enter FIGHT menu
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.3 + SLEEP_DELTA)
+        time.sleep(0.3)
         # Reset cursor to first option
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.UP))
-        time.sleep(0.3 + SLEEP_DELTA)
+        time.sleep(0.3)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.LEFT))
-        time.sleep(0.3 + SLEEP_DELTA)
+        time.sleep(0.3)
         # Select MEAN LOOK (assumes it's in top-left position)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(3 + SLEEP_DELTA)
+        time.sleep(3)
 
     def use_false_swipe():
         slot.abort_if_frozen()
-        time.sleep(0.7 + SLEEP_DELTA)
+        time.sleep(0.7)
         # Enter FIGHT menu
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.3 + SLEEP_DELTA)
+        time.sleep(0.3)
         # Reset cursor to first option
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.UP))
-        time.sleep(0.3 + SLEEP_DELTA)
+        time.sleep(0.3)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.LEFT))
-        time.sleep(0.3 + SLEEP_DELTA)
+        time.sleep(0.3)
         # Select FALSE SWIPE (assumes it's in bottom-left position)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.DOWN))
-        time.sleep(0.3 + SLEEP_DELTA)
+        time.sleep(0.3)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(3 + SLEEP_DELTA)
+        time.sleep(3)
 
     def use_spore():
         slot.abort_if_frozen()
-        time.sleep(0.7 + SLEEP_DELTA)
+        time.sleep(0.7)
         # Enter FIGHT menu
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.3 + SLEEP_DELTA)
+        time.sleep(0.3)
         # Reset cursor to first option
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.UP))
-        time.sleep(0.3 + SLEEP_DELTA)
+        time.sleep(0.3)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.LEFT))
-        time.sleep(0.3 + SLEEP_DELTA)
+        time.sleep(0.3)
         # Select SPORE (assumes it's in top-right position)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.RIGHT))
-        time.sleep(0.3 + SLEEP_DELTA)
+        time.sleep(0.3)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(3 + SLEEP_DELTA)
+        time.sleep(3)
 
     def throw_first_ultra_ball():
         slot.abort_if_frozen()
-        time.sleep(0.7 + SLEEP_DELTA)
+        time.sleep(0.7)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.RIGHT))
-        time.sleep(0.7 + SLEEP_DELTA)
+        time.sleep(0.7)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.7 + SLEEP_DELTA)
+        time.sleep(0.7)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.RIGHT))
-        time.sleep(0.7 + SLEEP_DELTA)
+        time.sleep(0.7)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.RIGHT))
-        time.sleep(0.7 + SLEEP_DELTA)
+        time.sleep(0.7)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.7 + SLEEP_DELTA)
+        time.sleep(0.7)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(3 + SLEEP_DELTA)
+        time.sleep(3)
 
     def throw_additional_ultra_ball():
         slot.abort_if_frozen()
-        time.sleep(0.7 + SLEEP_DELTA)
+        time.sleep(0.7)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.7 + SLEEP_DELTA)
+        time.sleep(0.7)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.7 + SLEEP_DELTA)
+        time.sleep(0.7)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(3 + SLEEP_DELTA)
+        time.sleep(3)
 
     def is_caught():
         slot.abort_if_frozen()
@@ -305,13 +292,13 @@ def attempt(slot: InstanceSlot):
 
     def finish_battle_messages():
         slot.abort_if_frozen()
-        time.sleep(0.7 + SLEEP_DELTA)
+        time.sleep(0.7)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.7 + SLEEP_DELTA)
+        time.sleep(0.7)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.DOWN))
-        time.sleep(0.7 + SLEEP_DELTA)
+        time.sleep(0.7)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(2.7 + SLEEP_DELTA)
+        time.sleep(2.7)
 
     def attempt_pokemon_heal():
         # needed to move back from ultra ball
@@ -319,105 +306,135 @@ def attempt(slot: InstanceSlot):
         slot.abort_if_frozen()
         # Open START menu and move to and open BAG
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.START))
-        time.sleep(0.2 + SLEEP_DELTA)
+        time.sleep(0.2)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.DOWN))
-        time.sleep(0.2 + SLEEP_DELTA)
+        time.sleep(0.2)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.DOWN))
-        time.sleep(0.2 + SLEEP_DELTA)
+        time.sleep(0.2)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.2 + SLEEP_DELTA)
+        time.sleep(0.2)
         # Move back to ITEMS
         for _ in range(2):
             o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.LEFT))
-            time.sleep(0.2 + SLEEP_DELTA)
+            time.sleep(0.2)
         # Use FULL HEAL
         for _ in range(4):
             o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-            time.sleep(0.5 + SLEEP_DELTA)
+            time.sleep(0.5)
 
     def save_game():
         slot.abort_if_frozen()
         print(f"Saving game on {idx}")
-        time.sleep(2 + SLEEP_DELTA)
-        stamp = datetime.now().strftime("%H-%M-%S")
-
-        def shoot(step):
-            filename = f"save-{idx}-{stamp}-{step}.png"
-            path, lua_name = debug_shot(filename)
-            pixel_hex_when_ready(
-                path,
-                0,
-                0,
-                lambda: o.client.save_screenshot_to_file(lua_name),
-            )
-            print(f"[{idx}] Saved {filename}")
-
+        time.sleep(2)
         # Move back to START menu from BAG
-        shoot("before-b")
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.B))
-        time.sleep(0.2 + SLEEP_DELTA)
+        time.sleep(0.2)
         # Move to SAVE
-        for down in range(2):
-            shoot(f"before-down-{down + 1}")
+        for _ in range(2):
             o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.DOWN))
-            time.sleep(0.7 + SLEEP_DELTA)
+            time.sleep(0.7)
         # Save Game
-        for press in range(3):
-            shoot(f"before-a-{press + 1}")
+        for _ in range(3):
             o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-            time.sleep(1 + SLEEP_DELTA)
-        print(f"Game saved on {idx} (supposedly)")
+            time.sleep(1)
+
+    def buy_scyther():
+        slot.abort_if_frozen()
+        # Buy Scyther
+        for _ in range(2):
+            o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
+            time.sleep(0.2)
+        for _ in range(3):
+            o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.DOWN))
+            time.sleep(0.2)
+        for _ in range(2):
+            o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
+            time.sleep(0.5)
+        # Decline Naming
+        for _ in range(1):
+            o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.DOWN))
+            time.sleep(0.2)
+        for _ in range(1):
+            o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
+            time.sleep(0.2)
+
+    def open_summary():
+        slot.abort_if_frozen()
+        # Open Pokemon Menu
+        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.START))
+        time.sleep(0.2)
+        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.DOWN))
+        time.sleep(0.2)
+        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
+        time.sleep(0.2)
+        # Open Scyther Summary
+        for _ in range(3):
+            o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.DOWN))
+            time.sleep(0.2)
+        for _ in range(2):
+            o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
+            time.sleep(0.2)
+        time.sleep(1)
 
     start_game()
-    set_initial_menu_cursor_position()
+    increment_encounter_count("SCYTHER")
+    if get_total_encounter_count() % 50 == 0:
+        print(f"Total Encounter Count: {get_total_encounter_count()}")
+        print(f"Encounter Counts: {for_console(encounter_counts)}")
+    buy_scyther()
+    open_summary()
+    if is_shiny_of_species("SCYTHER"):
+        print("Shiny Scyther found")
+        play_success(blocking=True)
+        group.stop.set()
+    # set_initial_menu_cursor_position()
     # equip_bike()
-    while not group.stop.is_set():
-        brief_zigzag()
-        if entered_battle():
-            while not dialogue_arrow_is_visible_on_screen():
-                time.sleep(0.1 + SLEEP_DELTA)
-            pokemon_name = get_wild_pokemon_name()
-            proceed_through_battle_intro_messages()
-            if is_shiny_of_species(pokemon_name) and pokemon_name not in EXCLUDED_POKEMON:
-                shown_name = for_console(pokemon_name)
-                print(f"Shiny {shown_name} found on {idx} after {get_total_encounter_count()} total encounters and {encounter_counts[pokemon_name]} {shown_name} encounters")
-                pause_all = True
-                use_spore()
-                use_false_swipe()
-                throw_first_ultra_ball()
-                while not is_caught():
-                    throw_additional_ultra_ball()
-                finish_battle_messages()
-                attempt_pokemon_heal()
-                save_game()
-                play_success(blocking=True)
-                catch_count += 1
-                if catch_count >= CATCH_LIMIT:
-                    group.kill()
-                    break
-                time.sleep(2 + SLEEP_DELTA)
-                pause_all = False
-                start_game()
-                set_initial_menu_cursor_position()
-            else:
-                run_away_from_battle()
+    # while not group.stop.is_set():
+    #     brief_zigzag()
+    #     if entered_battle():
+    #         while not dialogue_arrow_is_visible_on_screen():
+    #             time.sleep(0.1)
+    #         pokemon_name = get_wild_pokemon_name()
+    #         increment_encounter_count(pokemon_name)
+    #         if get_total_encounter_count() % 50 == 0:
+    #             print(f"Total Encounter Count: {get_total_encounter_count()}")
+    #             print(f"Encounter Counts: {for_console(encounter_counts)}")
+    #         proceed_through_battle_intro_messages()
+    #         if is_shiny_of_species(pokemon_name) and pokemon_name not in EXCLUDED_POKEMON:
+    #             shown_name = for_console(pokemon_name)
+    #             print(f"Shiny {shown_name} found on {idx} after {get_total_encounter_count()} total encounters and {encounter_counts[pokemon_name]} {shown_name} encounters")
+    #             pause_all = True
+    #             use_spore()
+    #             use_false_swipe()
+    #             throw_first_ultra_ball()
+    #             while not is_caught():
+    #                 throw_additional_ultra_ball()
+    #             finish_battle_messages()
+    #             attempt_pokemon_heal()
+    #             save_game()
+    #             play_success(blocking=True)
+    #             catch_count += 1
+    #             if catch_count >= CATCH_LIMIT:
+    #                 group.kill()
+    #                 break
+    #             time.sleep(2)
+    #             pause_all = False
+    #             start_game()
+    #             set_initial_menu_cursor_position()
+    #         else:
+    #             run_away_from_battle()
+    #     else:
+    #         continue
 
-            increment_encounter_count(pokemon_name)
-            if get_total_encounter_count() % 50 == 0:
-                print(f"Total Encounter Count: {get_total_encounter_count()}")
-                print(f"Encounter Counts: {for_console(encounter_counts)}")
-        else:
-            continue
-
-        while pause_all and not group.stop.is_set():
-            time.sleep(5 + SLEEP_DELTA)
-            if not pause_all:
-                start_game()
-                set_initial_menu_cursor_position()
-                # equip_bike()
-                break
+    #     while pause_all and not group.stop.is_set():
+    #         time.sleep(5)
+    #         if not pause_all:
+    #             start_game()
+    #             set_initial_menu_cursor_position()
+    #             # equip_bike()
+    #             break
 
 """Putting it all together and running it"""
 group = InstanceGroup(NUM_INSTANCES, POKEMON_RED_ROM, starting_port=STARTING_PORT, exe=MGBA_SDL)
-group.start(fast_forward=True, minimize=True)
+group.start(fast_forward=True)
 group.run(attempt)

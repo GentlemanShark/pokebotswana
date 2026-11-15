@@ -8,12 +8,12 @@
 """
 
 from pkbt.config import POKEMON_RED_ROM
-from pkbt.input.key_event import KeyEventType
-from pkbt.input.key_type import KeyType
 from pkbt.input.key_event import KeyEvent
-from pkbt.image_processing import pixel_hex, debug_shot
+from pkbt.input.key_event_type import KeyEventType
+from pkbt.input.key_type import KeyType
+from pkbt.screen.image_processing import pixel_hex, debug_shot
 from pkbt.audio import play_success
-from pkbt.instances import InstanceGroup, InstanceSlot, slot_dir
+from pkbt.session.instances import InstanceGroup, InstanceSlot, slot_dir
 import time
 import threading
 import random

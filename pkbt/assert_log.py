@@ -13,7 +13,7 @@ from datetime import datetime
 from pathlib import Path
 
 from pkbt.config import LOGS_DIR, REPO_ROOT
-from pkbt.instances import slot_dir
+from pkbt.session.instances import slot_dir
 
 _UNSAFE = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 _INDEXED = re.compile(r"^(\d+)-")

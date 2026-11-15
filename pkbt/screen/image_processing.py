@@ -5,8 +5,8 @@ from PIL import Image, ImageDraw
 
 from pkbt.assert_log import duplicate_failed_screenshot
 from pkbt.config import TEMP_DIR
-from pkbt.instances import InstanceSlot, slot_dir
-from pkbt.species import SpriteCheck
+from pkbt.session.instances import InstanceSlot, slot_dir
+from pkbt.screen.species import SpriteCheck
 
 def debug_shot(filename: str) -> tuple[Path, str]:
     """A keep-a-picture screenshot in <repo>/temp. Lua writes the relative path."""

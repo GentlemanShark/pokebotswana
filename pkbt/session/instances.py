@@ -12,10 +12,10 @@ from pathlib import Path
 
 from pkbt.config import MGBA_DEV, MGBA_SDL, SERVER_SCRIPT, SESSION_DIR
 from pkbt.console import for_console
-from pkbt.emulator import EmulatorProc
-from pkbt.mgba_connection import MGBAConnection
-from pkbt.orchestrator import Orchestrator
-from pkbt.windowing import (
+from pkbt.session.emulator import EmulatorProc
+from pkbt.session.mgba_connection import MGBAConnection
+from pkbt.session.orchestrator import Orchestrator
+from pkbt.session.windowing import (
     Window,
     arrange_windows_auto_grid,
     get_monitor,

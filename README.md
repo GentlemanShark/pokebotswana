@@ -50,13 +50,9 @@ Disclaimer for Emerald: unlike other gen 3 titles, Emerald soft resets to the sa
 
 This may not be necessary if you follow my advised project structure in Step 1.
 
-### 4. Run extremely simple demo
+### 4. Automate!
 
-1. In a command prompt, navigate to the repo root.
-2. Start the demo with `run.bat -m pkbt.automation.demos.single_start_demo`.
-3. A pair of mGBA game/scripting windows will open and a few A presses will be performed.
-
-### 5. Automate!
+From the repo root, start a script with `run.bat -m pkbt.automation.hatch_shiny_eevee`.
 
 I've included a script `hatch_shiny_eevee` that I've been using successfully for a while to hatch several thousand eggs per day with 15 simultaneous mGBA instances running in fast-forward mode. Because the bot works based on actual time (not frames), you'll almost certainly have to tweak its timing based on the number of instances and your computer's speed.
 

@@ -1,12 +1,12 @@
 from pkbt.config import POKEMON_RED_ROM
-from pkbt.input.key_event import KeyEventType
-from pkbt.input.key_type import KeyType
 from pkbt.input.key_event import KeyEvent
-from pkbt.image_processing import pixel_hex_when_ready, dialogue_arrow_is_visible, debug_shot
-from pkbt.text import FULL_DIALOGUE_BOX, PLAYER_PKMN_STATUS_BOX, read_text
+from pkbt.input.key_event_type import KeyEventType
+from pkbt.input.key_type import KeyType
+from pkbt.screen.image_processing import pixel_hex_when_ready, dialogue_arrow_is_visible, debug_shot
+from pkbt.screen.text import FULL_DIALOGUE_BOX, PLAYER_PKMN_STATUS_BOX, read_text
 from pkbt.audio import play_success
-from pkbt.instances import InstanceGroup, InstanceSlot, slot_dir
-from pkbt.species import SPECIES
+from pkbt.session.instances import InstanceGroup, InstanceSlot, slot_dir
+from pkbt.screen.species import SPECIES
 from pkbt.console import for_console
 import time
 import threading
@@ -22,7 +22,7 @@ BATTLE_SCREEN_DIALOGUE_BG_HEX = "#29526b"
 BATTLE_SCREEN_CAUGHT_BG_CROSSHAIR = (220, 130)
 BATTLE_SCREEN_CAUGHT_BG_HEX = "#29526b"
 
-EXCLUDED_POKEMON = ["PIDGEY", "ODDISH", "SUICUNE"]
+EXCLUDED_POKEMON = ["PIDGEY", "MEOWTH", "SUICUNE", "ODDISH"]
 # The number of shiny pokemon to catch before the bot stops
 CATCH_LIMIT = 2
 
@@ -30,8 +30,9 @@ CATCH_LIMIT = 2
 encounter_counts = {
     "PIDGEY": 0,
     "MEOWTH": 0,
-    "ODDISH": 0,
+    "GROWLITHE": 0,
     "SUICUNE": 0,
+    "ODDISH": 0,
 }
 runs_lock = threading.Lock()
 pause_all = False
@@ -179,7 +180,7 @@ def attempt(slot: InstanceSlot):
     def proceed_through_battle_intro_messages():
         slot.abort_if_frozen()
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.6)
+        time.sleep(1.2)
 
     def run_away_from_battle():
         slot.abort_if_frozen()

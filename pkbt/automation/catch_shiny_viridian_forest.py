@@ -1,13 +1,11 @@
 from pkbt.config import POKEMON_RED_ROM
-from pkbt.input.key_event import KeyEventType
-from pkbt.input.key_type import KeyType
 from pkbt.input.key_event import KeyEvent
-from pkbt.image_processing import pixel_hex_when_ready, dialogue_arrow_is_visible
-from pkbt.text import FULL_DIALOGUE_BOX, PLAYER_PKMN_STATUS_BOX, read_text
+from pkbt.input.key_event_type import KeyEventType
+from pkbt.input.key_type import KeyType
+from pkbt.screen.image_processing import pixel_hex_when_ready, dialogue_arrow_is_visible
+from pkbt.screen.text import FULL_DIALOGUE_BOX, PLAYER_PKMN_STATUS_BOX, read_text
 from pkbt.audio import play_success
-from pkbt.instances import InstanceGroup, InstanceSlot, slot_dir
-from pkbt.species import SPECIES
-from pkbt.console import for_console
+from pkbt.session.instances import InstanceGroup, InstanceSlot, slot_dir
 import time
 import threading
 import random
@@ -17,31 +15,30 @@ STARTING_PORT = 8888 # Leave me alone
 
 """Tweak as desired"""
 NUM_INSTANCES =12
+CROSSHAIR = (105, 38)
+SHINY_STAR_HEX = "#ffd652"
 BATTLE_SCREEN_DIALOGUE_BG_CROSSHAIR = (220, 146)
 BATTLE_SCREEN_DIALOGUE_BG_HEX = "#29526b"
+BATTLE_SCREEN_WILD_POKEMON_CROSSHAIR = (174, 56)
 BATTLE_SCREEN_CAUGHT_BG_CROSSHAIR = (220, 130)
 BATTLE_SCREEN_CAUGHT_BG_HEX = "#29526b"
-
-"""Pokemon included here will NOT be checked for shiny"""
-EXCLUDED_POKEMON = ["PIDGEY", "SPEAROW", "MANKEY"]
+NON_SHINY_KAKUNA_HEX = "#8c7b00"
+NON_SHINY_WEEDLE_HEX = "#efad42"
+NON_SHINY_CATERPIE_HEX = "#7b9c63"
+NON_SHINY_PIKACHU_HEX = "#ffef00"
+NON_SHINY_METAPOD_HEX = "#9cd64a"
 
 """Shared thread-safe variables"""
-encounter_counts = {
-    "NIDORAN♂": 0,
-    "NIDORAN♀": 0,
-    "SPEAROW": 0,
-    "MANKEY": 0,
-    "PIDGEY": 0,
-    "JIGGLYPUFF": 0,
-    "UNKNOWN": 0,
-}
+runs = 0
+pikachu_runs = 0
 runs_lock = threading.Lock()
 stop_all = False
 
 def attempt(slot: InstanceSlot):
     o = slot.orch
     idx = slot.idx
-    global encounter_counts
+    global runs
+    global pikachu_runs
     global stop_all
 
     def start_game():
@@ -143,18 +140,6 @@ def attempt(slot: InstanceSlot):
                 return text[len(prefix):-len(suffix)]
         return ""
 
-    def increment_encounter_count(pokemon_name: str):
-        slot.abort_if_frozen()
-        if pokemon_name not in encounter_counts:
-            print(f"[{idx}] Unrecognized pokemon name: {for_console(pokemon_name)}")
-            encounter_counts["UNKNOWN"] += 1
-        else:
-            encounter_counts[pokemon_name] += 1
-
-    def get_total_encounter_count():
-        slot.abort_if_frozen()
-        return sum(encounter_counts.values())
-
     def is_player_pkmn_poisoned():
         slot.abort_if_frozen()
         text = read_text(slot_dir(idx) / f"{idx}.png", PLAYER_PKMN_STATUS_BOX).upper()
@@ -162,9 +147,24 @@ def attempt(slot: InstanceSlot):
 
     def is_shiny_of_species(pokemon_name: str):
         slot.abort_if_frozen()
-        species = SPECIES[pokemon_name]
-        pokemon_hex = capture_pixel(species.wild.crosshair[0], species.wild.crosshair[1])
-        is_shiny = pokemon_hex != species.wild.normal_hex
+        is_shiny = False
+        if pokemon_name == "KAKUNA":
+            pokemon_hex = capture_pixel(BATTLE_SCREEN_WILD_POKEMON_CROSSHAIR[0], BATTLE_SCREEN_WILD_POKEMON_CROSSHAIR[1])
+            # is_shiny = pokemon_hex != NON_SHINY_KAKUNA_HEX
+        elif pokemon_name == "WEEDLE":
+            pokemon_hex = capture_pixel(BATTLE_SCREEN_WILD_POKEMON_CROSSHAIR[0], BATTLE_SCREEN_WILD_POKEMON_CROSSHAIR[1])
+            # is_shiny = pokemon_hex != NON_SHINY_WEEDLE_HEX
+        elif pokemon_name == "CATERPIE":
+            pokemon_hex = capture_pixel(BATTLE_SCREEN_WILD_POKEMON_CROSSHAIR[0], BATTLE_SCREEN_WILD_POKEMON_CROSSHAIR[1])
+            # is_shiny = pokemon_hex != NON_SHINY_CATERPIE_HEX
+        elif pokemon_name == "PIKACHU":
+            pokemon_hex = capture_pixel(BATTLE_SCREEN_WILD_POKEMON_CROSSHAIR[0], BATTLE_SCREEN_WILD_POKEMON_CROSSHAIR[1])
+            is_shiny = pokemon_hex != NON_SHINY_PIKACHU_HEX
+        elif pokemon_name == "METAPOD":
+            pokemon_hex = capture_pixel(BATTLE_SCREEN_WILD_POKEMON_CROSSHAIR[0], BATTLE_SCREEN_WILD_POKEMON_CROSSHAIR[1])
+            # is_shiny = pokemon_hex != NON_SHINY_METAPOD_HEX
+        else:
+            raise ValueError(f"Invalid pokemon name: {pokemon_name}")
         return is_shiny
 
     def proceed_through_battle_intro_messages():
@@ -281,14 +281,14 @@ def attempt(slot: InstanceSlot):
             while not dialogue_arrow_is_visible_on_screen():
                 time.sleep(0.4)
             pokemon_name = get_wild_pokemon_name()
-            increment_encounter_count(pokemon_name)
-            if get_total_encounter_count() % 50 == 0:
-                print(f"Total Encounter Count: {get_total_encounter_count()}")
-                print(f"Encounter Counts: {for_console(encounter_counts)}")
+            runs += 1
+            if pokemon_name == "PIKACHU":
+                pikachu_runs += 1
+            if runs % 50 == 0:
+                print(f"Runs: {runs}, Pikachu Runs: {pikachu_runs}")
             proceed_through_battle_intro_messages()
-            if is_shiny_of_species(pokemon_name) and pokemon_name not in EXCLUDED_POKEMON:
-                shown_name = for_console(pokemon_name)
-                print(f"Shiny {shown_name} found on {idx} after {get_total_encounter_count()} total encounters and {encounter_counts[pokemon_name]} {shown_name} encounters")
+            if is_shiny_of_species(pokemon_name):
+                print(f"Shiny {pokemon_name} found on {idx} after {runs} runs")
                 stop_all = True
                 use_mean_look()
                 throw_first_ultra_ball()
