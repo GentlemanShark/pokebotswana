@@ -233,7 +233,7 @@ def get_monitors() -> list[tuple[int, int, int, int]]:
     """(left, top, width, height) for each display. Index 0 is the primary monitor."""
     monitors = []
     for handle, _, _rect in win32api.EnumDisplayMonitors():
-        info = win32api.GetMonitorInfo(handle)
+        info = win32api.GetMonitorInfo(handle.handle)
         left, top, right, bottom = info["Monitor"]
         primary = bool(info["Flags"] & win32con.MONITORINFOF_PRIMARY)
         monitors.append((primary, left, top, right - left, bottom - top))

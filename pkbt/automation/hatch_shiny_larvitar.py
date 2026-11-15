@@ -19,7 +19,7 @@ def attempt(slot: InstanceSlot):
     # Helper functions
     def pokemon_is_shiny_in_summary():
         slot.abort_if_frozen()
-        return summary_sprite_is_shiny(slot, POKEMON_SPECIES.summary)
+        return summary_sprite_is_shiny(slot, POKEMON_SPECIES.require_summary())
 
     def print_shiny_alert():
         print(f"[{slot.idx}] Shiny found after {report.eggs_hatched} eggs hatched")

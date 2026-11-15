@@ -126,8 +126,12 @@ class MGBAConnection:
             while self._connected and not getattr(self, '_stop_listening', False):
                 # Try to receive data with a short timeout
                 try:
-                    self._socket.settimeout(0.1)  # 100ms timeout
-                    data = self._socket.recv(1024).decode()
+                    sock = self._socket
+                    if sock is None:
+                        self._connected = False
+                        break
+                    sock.settimeout(0.1)  # 100ms timeout
+                    data = sock.recv(1024).decode()
                     if data:
                         if self._on_message:
                             self._on_message(data.strip())

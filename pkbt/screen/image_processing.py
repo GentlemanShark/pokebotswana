@@ -13,9 +13,12 @@ def debug_shot(filename: str) -> tuple[Path, str]:
     TEMP_DIR.mkdir(parents=True, exist_ok=True)
     return TEMP_DIR / filename, f"temp/{filename}"
 
-def pixel_rgb(path, x, y):
+def pixel_rgb(path, x, y) -> tuple[int, int, int]:
     with Image.open(path) as im:
-        return im.convert("RGB").getpixel((x, y))
+        pixel = im.convert("RGB").getpixel((x, y))
+    if not isinstance(pixel, tuple) or len(pixel) < 3:
+        raise ValueError(f"Expected an RGB pixel at ({x}, {y})")
+    return (pixel[0], pixel[1], pixel[2])
 
 def pixel_hex(path, x, y):
     r, g, b = pixel_rgb(path, x, y)
