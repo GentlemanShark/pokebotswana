@@ -7,6 +7,7 @@ Example:
 
 import time
 from typing import Callable
+from pkbt.assert_log import retry_loop, set_retry_attempt
 from pkbt.instances import InstanceSlot
 from pkbt.console import callable_name, for_console
 from pkbt.input.key_type import KeyType
@@ -39,19 +40,21 @@ def press_wait_until(slot: InstanceSlot, key: KeyType, time_before_assertion: fl
 def _retry(slot: InstanceSlot, callback, timer=3, max_tries=MAX_TRIES):
     tries = 1
     has_previosuly_failed = False
-    while tries < max_tries:
-        slot.abort_if_frozen()
-        try:
-            callback()
-            if has_previosuly_failed:
-                print(f"[{slot.idx}] Successfully completed {callback.__name__} after {tries} tries")
-            return # Success
-        except Exception as e:
-            print(f"[{slot.idx}] Retrying {callback.__name__} after {tries} failure(s): {for_console(e)}")
-            has_previosuly_failed = True
-            time.sleep(timer)
-            tries += 1
-    raise Exception(f"[{slot.idx}] Abandoned {callback.__name__} after {max_tries} tries, restarting game in slot {slot.idx}")
+    with retry_loop(callback.__name__):
+        while tries <= max_tries:
+            slot.abort_if_frozen()
+            set_retry_attempt(tries)
+            try:
+                callback()
+                if has_previosuly_failed:
+                    print(f"[{slot.idx}] Successfully completed {callback.__name__} after {tries} tries")
+                return # Success
+            except Exception as e:
+                print(f"[{slot.idx}] Retrying {callback.__name__} after {tries} failure(s): {for_console(e)}")
+                has_previosuly_failed = True
+                time.sleep(timer)
+                tries += 1
+        raise Exception(f"[{slot.idx}] Abandoned {callback.__name__} after {max_tries} tries, restarting game in slot {slot.idx}")
 
 
 # Functions for starting/restarting the game

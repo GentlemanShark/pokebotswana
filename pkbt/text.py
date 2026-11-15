@@ -9,6 +9,7 @@ import time
 import pytesseract
 from PIL import Image, ImageOps
 
+from pkbt.assert_log import duplicate_failed_screenshot
 from pkbt.config import TESSDATA_DIR, TESSERACT
 from pkbt.console import for_console
 from pkbt.instances import InstanceSlot, slot_dir
@@ -74,6 +75,7 @@ def assert_equals_dialogue_text(slot: InstanceSlot, text: str, timeout=2.0) -> N
     """
     dialogue_text = read_overworld_dialogue(slot, timeout)
     if dialogue_text != text:
+        duplicate_failed_screenshot(slot.idx, assert_equals_dialogue_text.__name__)
         raise Exception(f'Failed {assert_equals_dialogue_text.__name__}. Dialogue text is "{for_console(dialogue_text)}" instead of expected "{for_console(text)}"')
 
 def assert_contains_dialogue_text(slot: InstanceSlot, text: str, timeout=2.0) -> None:
@@ -81,6 +83,7 @@ def assert_contains_dialogue_text(slot: InstanceSlot, text: str, timeout=2.0) ->
     """
     dialogue_text = read_overworld_dialogue(slot, timeout)
     if text not in dialogue_text:
+        duplicate_failed_screenshot(slot.idx, assert_contains_dialogue_text.__name__)
         raise Exception(f'Failed {assert_contains_dialogue_text.__name__}. Dialogue text is "{for_console(dialogue_text)}" instead of expected "{for_console(text)}"')
 
 def read_text(source, box: tuple[int, int, int, int]) -> str:
@@ -90,8 +93,13 @@ def read_text(source, box: tuple[int, int, int, int]) -> str:
         raise FileNotFoundError(
             f"Missing {traineddata}. The GBA English training file is pkmngba_en.traineddata."
         )
+    opened_here = not isinstance(source, Image.Image)
     image = _open(source)
-    prepared = _prepare(image, box)
+    try:
+        prepared = _prepare(image, box)
+    finally:
+        if opened_here:
+            image.close()
     config = f"--tessdata-dir {TESSDATA_DIR} --oem 0 --psm 6"
     return pytesseract.image_to_string(prepared, lang=LANG, config=config).strip()
 
@@ -118,4 +126,5 @@ def assert_on_continue_screen(slot: InstanceSlot, timeout=2.0) -> None:
     """
     continue_text = capture_screenshot_and_read_text(slot, [23, 12, 76, 22], timeout)
     if continue_text != "CONTINUE":
+        duplicate_failed_screenshot(slot.idx, assert_on_continue_screen.__name__)
         raise Exception(f'Failed {assert_on_continue_screen.__name__}. CONTINUE text is "{for_console(continue_text)}" instead of expected "CONTINUE"')

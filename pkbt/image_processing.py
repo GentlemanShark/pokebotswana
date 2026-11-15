@@ -3,6 +3,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
+from pkbt.assert_log import duplicate_failed_screenshot
 from pkbt.config import TEMP_DIR
 from pkbt.instances import InstanceSlot, slot_dir
 from pkbt.species import SpriteCheck
@@ -13,8 +14,8 @@ def debug_shot(filename: str) -> tuple[Path, str]:
     return TEMP_DIR / filename, f"temp/{filename}"
 
 def pixel_rgb(path, x, y):
-    im = Image.open(path).convert("RGB")  # 3 channels, no alpha
-    return im.getpixel((x, y))            # Normal: (x, y)
+    with Image.open(path) as im:
+        return im.convert("RGB").getpixel((x, y))
 
 def pixel_hex(path, x, y):
     r, g, b = pixel_rgb(path, x, y)
@@ -34,10 +35,11 @@ def dialogue_arrow_is_visible(path, take_screenshot=None, timeout=2.0) -> bool:
     dialogue_arrow_rgb = (255, 0, 0)
     if take_screenshot is not None:
         pixel_hex_when_ready(path, dialogue_arrow_x_start, dialogue_arrow_y, take_screenshot, timeout)
-    im = Image.open(path).convert("RGB")
-    for x in range(dialogue_arrow_x_start, dialogue_arrow_x_end + 1):
-        if im.getpixel((x, dialogue_arrow_y)) == dialogue_arrow_rgb:
-            return True
+    with Image.open(path) as im:
+        rgb = im.convert("RGB")
+        for x in range(dialogue_arrow_x_start, dialogue_arrow_x_end + 1):
+            if rgb.getpixel((x, dialogue_arrow_y)) == dialogue_arrow_rgb:
+                return True
     return False
 
 def pixel_hex_when_ready(path, x, y, take_screenshot, timeout=2.0):
@@ -87,6 +89,7 @@ def assert_hex_at_position(slot: InstanceSlot, xy: tuple[int, int], hex: str, ti
     """
     pixel_hex = get_pixel_hex(slot, xy, timeout)
     if pixel_hex != hex:
+        duplicate_failed_screenshot(slot.idx, assert_hex_at_position.__name__)
         raise Exception(f'Failed {assert_hex_at_position.__name__}. Pixel color at {xy} is {pixel_hex} instead of {hex}')
 
 def assert_not_hex_at_position(slot: InstanceSlot, xy: tuple[int, int], hex: str, timeout=2.0) -> None:
@@ -94,6 +97,7 @@ def assert_not_hex_at_position(slot: InstanceSlot, xy: tuple[int, int], hex: str
     """
     pixel_hex = get_pixel_hex(slot, xy, timeout)
     if pixel_hex == hex:
+        duplicate_failed_screenshot(slot.idx, assert_not_hex_at_position.__name__)
         raise Exception(f'Failed {assert_not_hex_at_position.__name__}. Pixel color at {xy} is {pixel_hex} instead of not {hex}')
 
 def save_with_crosshair(src_path, out_path, x, y):
