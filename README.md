@@ -2,7 +2,7 @@
 
 [Jump to Quick Start](#quick-start)
 
-Instructions to and feedback from the emulator are handled through its [official scripting API](https://mgba.io/docs/scripting.html) (using Lua), while client automation and TCP socket communication are written in Python. No building required, just a copy of the official development build.
+This bot runs on Windows. Instructions to and feedback from the emulator are handled through its [official scripting API](https://mgba.io/docs/scripting.html) (using Lua), while client automation and TCP socket communication are written in Python. No building required, just a copy of the official development build.
 
 You may create dynamic, automated scripts for multiple independent mGBA instances simultaneously which include:
 * Pressing buttons, holding/releasing buttons
@@ -52,8 +52,8 @@ This may not be necessary if you follow my advised project structure in Step 1.
 
 ### 4. Run extremely simple demo
 
-1. In command prompt (Windows) or terminal (MacOS, Linux), navigate to repo root.
-2. Start the Windows demo with `run.bat -m pkbt.automation.demos.single_start_demo`, or the MacOS/Linux demo with `./run.sh -m pkbt.automation.demos.single_start_demo`
+1. In a command prompt, navigate to the repo root.
+2. Start the demo with `run.bat -m pkbt.automation.demos.single_start_demo`.
 3. A pair of mGBA game/scripting windows will open and a few A presses will be performed.
 
 ### 5. Automate!
