@@ -1,12 +1,12 @@
 from pkbt.config import POKEMON_RED_ROM
-from pkbt.input.key_event import KeyEventType
-from pkbt.input.key_type import KeyType
 from pkbt.input.key_event import KeyEvent
-from pkbt.image_processing import pixel_hex_when_ready, dialogue_arrow_is_visible, debug_shot
-from pkbt.text import FULL_DIALOGUE_BOX, PLAYER_PKMN_STATUS_BOX, read_text
+from pkbt.input.key_event_type import KeyEventType
+from pkbt.input.key_type import KeyType
+from pkbt.screen.image_processing import pixel_hex_when_ready, dialogue_arrow_is_visible, debug_shot
+from pkbt.screen.text import FULL_DIALOGUE_BOX, PLAYER_PKMN_STATUS_BOX, read_text
 from pkbt.audio import play_success
-from pkbt.instances import InstanceGroup, InstanceSlot, slot_dir
-from pkbt.species import SPECIES
+from pkbt.session.instances import InstanceGroup, InstanceSlot, slot_dir
+from pkbt.screen.species import SPECIES
 from pkbt.console import for_console
 import time
 import threading
@@ -22,18 +22,16 @@ BATTLE_SCREEN_DIALOGUE_BG_HEX = "#29526b"
 BATTLE_SCREEN_CAUGHT_BG_CROSSHAIR = (220, 130)
 BATTLE_SCREEN_CAUGHT_BG_HEX = "#29526b"
 
-EXCLUDED_POKEMON = ["RATTATA", "RATICATE", "KOFFING", "WEEZING"]
+EXCLUDED_POKEMON = ["ZUBAT"]
 # The number of shiny pokemon to catch before the bot stops
 CATCH_LIMIT = 4
 
 """Shared thread-safe variables"""
 encounter_counts = {
-    "RATTATA": 0,
-    "RATICATE": 0,
-    "KOFFING": 0,
-    "WEEZING": 0,
-    "GROWLITHE": 0,
-    "GRIMER": 0,
+    "ZUBAT": 0,
+    "GEODUDE": 0,
+    "CLEFAIRY": 0,
+    "PARAS": 0,
 }
 runs_lock = threading.Lock()
 pause_all = False
@@ -103,15 +101,15 @@ def attempt(slot: InstanceSlot):
 
     def brief_zigzag():
         slot.abort_if_frozen()
-        for _ in range(1):
+        for i in range(1):
             o.client.execute_event(KeyEvent(KeyEventType.HOLD, KeyType.RIGHT))
-            time.sleep(0.2)
+            time.sleep(0.3)
             o.client.execute_event(KeyEvent(KeyEventType.RELEASE, KeyType.RIGHT))
-            time.sleep(0.03)
+            time.sleep(0.1)
             o.client.execute_event(KeyEvent(KeyEventType.HOLD, KeyType.LEFT))
-            time.sleep(0.2)
+            time.sleep(0.3)
             o.client.execute_event(KeyEvent(KeyEventType.RELEASE, KeyType.LEFT))
-            time.sleep(0.03)
+            time.sleep(0.1)
 
     def capture_pixel(x: int, y: int) -> str:
         slot.abort_if_frozen()
@@ -180,8 +178,9 @@ def attempt(slot: InstanceSlot):
 
     def proceed_through_battle_intro_messages():
         slot.abort_if_frozen()
+        time.sleep(0.4)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(1.2)
+        time.sleep(0.5)
 
     def run_away_from_battle():
         slot.abort_if_frozen()
@@ -198,49 +197,8 @@ def attempt(slot: InstanceSlot):
     def use_mean_look():
         slot.abort_if_frozen()
         time.sleep(0.7)
-        # Enter FIGHT menu
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.3)
-        # Reset cursor to first option
-        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.UP))
-        time.sleep(0.3)
-        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.LEFT))
-        time.sleep(0.3)
-        # Select MEAN LOOK (assumes it's in top-left position)
-        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(3)
-
-    def use_false_swipe():
-        slot.abort_if_frozen()
         time.sleep(0.7)
-        # Enter FIGHT menu
-        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.3)
-        # Reset cursor to first option
-        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.UP))
-        time.sleep(0.3)
-        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.LEFT))
-        time.sleep(0.3)
-        # Select FALSE SWIPE (assumes it's in bottom-left position)
-        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.DOWN))
-        time.sleep(0.3)
-        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(3)
-
-    def use_spore():
-        slot.abort_if_frozen()
-        time.sleep(0.7)
-        # Enter FIGHT menu
-        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.3)
-        # Reset cursor to first option
-        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.UP))
-        time.sleep(0.3)
-        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.LEFT))
-        time.sleep(0.3)
-        # Select SPORE (assumes it's in top-right position)
-        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.RIGHT))
-        time.sleep(0.3)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
         time.sleep(3)
 
@@ -330,7 +288,7 @@ def attempt(slot: InstanceSlot):
         brief_zigzag()
         if entered_battle():
             while not dialogue_arrow_is_visible_on_screen():
-                time.sleep(0.1)
+                time.sleep(0.4)
             pokemon_name = get_wild_pokemon_name()
             increment_encounter_count(pokemon_name)
             if get_total_encounter_count() % 50 == 0:
@@ -341,8 +299,7 @@ def attempt(slot: InstanceSlot):
                 shown_name = for_console(pokemon_name)
                 print(f"Shiny {shown_name} found on {idx} after {get_total_encounter_count()} total encounters and {encounter_counts[pokemon_name]} {shown_name} encounters")
                 pause_all = True
-                use_spore()
-                use_false_swipe()
+                use_mean_look()
                 throw_first_ultra_ball()
                 while not is_caught():
                     throw_additional_ultra_ball()

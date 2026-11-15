@@ -8,14 +8,14 @@ Example:
 import time
 from typing import Callable
 from pkbt.assert_log import retry_loop, set_retry_attempt
-from pkbt.instances import InstanceSlot
+from pkbt.session.instances import InstanceSlot
 from pkbt.console import callable_name, for_console
-from pkbt.input.key_type import KeyType
-from pkbt.input.key_event import KeyEventType
 from pkbt.input.key_event import KeyEvent
+from pkbt.input.key_event_type import KeyEventType
+from pkbt.input.key_type import KeyType
 import random
-from pkbt.text import assert_on_continue_screen, assert_contains_dialogue_text
-from pkbt.image_processing import assert_not_hex_at_position, assert_hex_at_position, get_pixel_hex
+from pkbt.screen.text import assert_on_continue_screen, assert_contains_dialogue_text
+from pkbt.screen.image_processing import assert_not_hex_at_position, assert_hex_at_position, get_pixel_hex
 
 # Bot may not process inputs when several mGBA instances are running in parallel.
 # It will attempt to detect this and retry the action up to MAX_TRIES times.

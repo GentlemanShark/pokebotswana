@@ -1,12 +1,12 @@
-from pkbt.config import POKEMON_RED_ROM
-from pkbt.input.key_event import KeyEventType
-from pkbt.input.key_type import KeyType
+from pkbt.config import MGBA_SDL, POKEMON_RED_ROM
 from pkbt.input.key_event import KeyEvent
-from pkbt.image_processing import pixel_hex_when_ready, dialogue_arrow_is_visible, debug_shot
-from pkbt.text import FULL_DIALOGUE_BOX, PLAYER_PKMN_STATUS_BOX, read_text
+from pkbt.input.key_event_type import KeyEventType
+from pkbt.input.key_type import KeyType
+from pkbt.screen.image_processing import pixel_hex_when_ready, dialogue_arrow_is_visible, debug_shot
+from pkbt.screen.text import FULL_DIALOGUE_BOX, PLAYER_PKMN_STATUS_BOX, read_text
 from pkbt.audio import play_success
-from pkbt.instances import InstanceGroup, InstanceSlot, slot_dir
-from pkbt.species import SPECIES
+from pkbt.session.instances import InstanceGroup, InstanceSlot, slot_dir
+from pkbt.screen.species import SPECIES
 from pkbt.console import for_console
 import time
 import threading
@@ -16,24 +16,26 @@ import random
 STARTING_PORT = 8888 # Leave me alone
 
 """Tweak as desired"""
-NUM_INSTANCES =12
+NUM_INSTANCES = 30
 BATTLE_SCREEN_DIALOGUE_BG_CROSSHAIR = (220, 146)
 BATTLE_SCREEN_DIALOGUE_BG_HEX = "#29526b"
 BATTLE_SCREEN_CAUGHT_BG_CROSSHAIR = (220, 130)
 BATTLE_SCREEN_CAUGHT_BG_HEX = "#29526b"
 
-EXCLUDED_POKEMON = ["PIDGEY", "SPEAROW", "RATTATA", "MANKEY", "SUICUNE"]
+EXCLUDED_POKEMON = ["GOLBAT", "ZUBAT", "SEEL", "DEWGONG"]
 # The number of shiny pokemon to catch before the bot stops
-CATCH_LIMIT = 2
+CATCH_LIMIT = 1
+# Added to every fixed sleep. The reset delay stays a random range.
+SLEEP_DELTA = 0.0
 
 """Shared thread-safe variables"""
 encounter_counts = {
-    "PIDGEY": 0,
-    "SPEAROW": 0,
-    "RATTATA": 0,
-    "MANKEY": 0,
-    "SUICUNE": 0,
-    "EKANS": 0,
+    "PSYDUCK": 0,
+    "GOLDUCK": 0,
+    "SEEL": 0,
+    "DEWGONG": 0,
+    "GOLBAT": 0,
+    "ZUBAT": 0,
 }
 runs_lock = threading.Lock()
 pause_all = False
@@ -56,62 +58,64 @@ def attempt(slot: InstanceSlot):
         time.sleep(random.uniform(0.7, 2.5))
         for _ in range(8):
             o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-            time.sleep(0.7)
-        time.sleep(2)
+            time.sleep(0.7 + SLEEP_DELTA)
+        time.sleep(2 + SLEEP_DELTA)
 
     def set_initial_menu_cursor_position():
         slot.abort_if_frozen()
         # Open the BAG menu
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.START))
-        time.sleep(0.2)
+        time.sleep(0.2 + SLEEP_DELTA)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.DOWN))
-        time.sleep(0.2)
+        time.sleep(0.2 + SLEEP_DELTA)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.DOWN))
-        time.sleep(0.2)
+        time.sleep(0.2 + SLEEP_DELTA)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.2)
+        time.sleep(0.2 + SLEEP_DELTA)
         # Move To FULL HEAL
         for _ in range(4):
             o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.DOWN))
-            time.sleep(0.2)
+            time.sleep(0.2 + SLEEP_DELTA)
         # Move to POKE BALLS
         for _ in range(2):
             o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.RIGHT))
-            time.sleep(0.2)
+            time.sleep(0.2 + SLEEP_DELTA)
         # Move to ULTRA BALL
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.DOWN))
-        time.sleep(0.2)
+        time.sleep(0.2 + SLEEP_DELTA)
         # Return to ITEMS tab
         for _ in range(2):
             o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.LEFT))
-            time.sleep(0.2)
+            time.sleep(0.2 + SLEEP_DELTA)
         # Return to main menu
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.B))
-        time.sleep(0.2)
+        time.sleep(0.2 + SLEEP_DELTA)
         # Move Cursor back to POKEDEX
         for _ in range(2):
             o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.UP))
-            time.sleep(0.2)
+            time.sleep(0.2 + SLEEP_DELTA)
         # Close start menu
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.B))
-        time.sleep(0.2)
+        time.sleep(0.2 + SLEEP_DELTA)
 
     def equip_bike():
         slot.abort_if_frozen()
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.SELECT))
-        time.sleep(0.7)
+        time.sleep(0.7 + SLEEP_DELTA)
 
     def brief_zigzag():
         slot.abort_if_frozen()
-        for i in range(1):
-            o.client.execute_event(KeyEvent(KeyEventType.HOLD, KeyType.RIGHT))
-            time.sleep(0.3)
-            o.client.execute_event(KeyEvent(KeyEventType.RELEASE, KeyType.RIGHT))
-            time.sleep(0.1)
-            o.client.execute_event(KeyEvent(KeyEventType.HOLD, KeyType.LEFT))
-            time.sleep(0.3)
-            o.client.execute_event(KeyEvent(KeyEventType.RELEASE, KeyType.LEFT))
-            time.sleep(0.1)
+        o.client.execute_event(KeyEvent(KeyEventType.HOLD, KeyType.B))
+        for _ in range(1):
+            o.client.execute_event(KeyEvent(KeyEventType.HOLD, KeyType.UP))
+            time.sleep(0.2 + SLEEP_DELTA)
+            o.client.execute_event(KeyEvent(KeyEventType.RELEASE, KeyType.UP))
+            time.sleep(0.03 + SLEEP_DELTA)
+            o.client.execute_event(KeyEvent(KeyEventType.HOLD, KeyType.DOWN))
+            time.sleep(0.2 + SLEEP_DELTA)
+            o.client.execute_event(KeyEvent(KeyEventType.RELEASE, KeyType.DOWN))
+            time.sleep(0.03 + SLEEP_DELTA)
+        o.client.execute_event(KeyEvent(KeyEventType.RELEASE, KeyType.B))
 
     def capture_pixel(x: int, y: int) -> str:
         slot.abort_if_frozen()
@@ -134,6 +138,14 @@ def attempt(slot: InstanceSlot):
         bg_hex = capture_pixel(BATTLE_SCREEN_DIALOGUE_BG_CROSSHAIR[0], BATTLE_SCREEN_DIALOGUE_BG_CROSSHAIR[1])
         return bg_hex == BATTLE_SCREEN_DIALOGUE_BG_HEX
 
+    def canonical_name(name: str) -> str:
+        if name in SPECIES:
+            return name
+        for species_name, species in SPECIES.items():
+            if species.other_names and name in species.other_names:
+                return species_name
+        return name
+
     def get_wild_pokemon_name():
         slot.abort_if_frozen()
         path = slot_dir(idx) / f"{idx}.png"
@@ -142,7 +154,7 @@ def attempt(slot: InstanceSlot):
         prefix = "WILD"
         for suffix in ("APPEARED!", "OPPEORED!"):
             if text.startswith(prefix) and text.endswith(suffix):
-                return text[len(prefix):-len(suffix)]
+                return canonical_name(text[len(prefix):-len(suffix)])
         return ""
 
     def increment_encounter_count(pokemon_name: str):
@@ -180,55 +192,95 @@ def attempt(slot: InstanceSlot):
 
     def proceed_through_battle_intro_messages():
         slot.abort_if_frozen()
-        time.sleep(0.4)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(1.5)
+        time.sleep(1.2 + SLEEP_DELTA)
 
     def run_away_from_battle():
         slot.abort_if_frozen()
-        time.sleep(0.1)
+        time.sleep(0.1 + SLEEP_DELTA)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.DOWN))
-        time.sleep(0.1)
+        time.sleep(0.1 + SLEEP_DELTA)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.RIGHT))
-        time.sleep(0.1)
+        time.sleep(0.1 + SLEEP_DELTA)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.1)
+        time.sleep(0.1 + SLEEP_DELTA)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.1)
+        time.sleep(0.1 + SLEEP_DELTA)
 
     def use_mean_look():
         slot.abort_if_frozen()
-        time.sleep(0.7)
+        time.sleep(0.7 + SLEEP_DELTA)
+        # Enter FIGHT menu
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.7)
+        time.sleep(0.3 + SLEEP_DELTA)
+        # Reset cursor to first option
+        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.UP))
+        time.sleep(0.3 + SLEEP_DELTA)
+        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.LEFT))
+        time.sleep(0.3 + SLEEP_DELTA)
+        # Select MEAN LOOK (assumes it's in top-left position)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(3)
+        time.sleep(3 + SLEEP_DELTA)
+
+    def use_false_swipe():
+        slot.abort_if_frozen()
+        time.sleep(0.7 + SLEEP_DELTA)
+        # Enter FIGHT menu
+        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
+        time.sleep(0.3 + SLEEP_DELTA)
+        # Reset cursor to first option
+        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.UP))
+        time.sleep(0.3 + SLEEP_DELTA)
+        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.LEFT))
+        time.sleep(0.3 + SLEEP_DELTA)
+        # Select FALSE SWIPE (assumes it's in bottom-left position)
+        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.DOWN))
+        time.sleep(0.3 + SLEEP_DELTA)
+        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
+        time.sleep(3 + SLEEP_DELTA)
+
+    def use_spore():
+        slot.abort_if_frozen()
+        time.sleep(0.7 + SLEEP_DELTA)
+        # Enter FIGHT menu
+        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
+        time.sleep(0.3 + SLEEP_DELTA)
+        # Reset cursor to first option
+        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.UP))
+        time.sleep(0.3 + SLEEP_DELTA)
+        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.LEFT))
+        time.sleep(0.3 + SLEEP_DELTA)
+        # Select SPORE (assumes it's in top-right position)
+        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.RIGHT))
+        time.sleep(0.3 + SLEEP_DELTA)
+        o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
+        time.sleep(3 + SLEEP_DELTA)
 
     def throw_first_ultra_ball():
         slot.abort_if_frozen()
-        time.sleep(0.7)
+        time.sleep(0.7 + SLEEP_DELTA)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.RIGHT))
-        time.sleep(0.7)
+        time.sleep(0.7 + SLEEP_DELTA)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.7)
+        time.sleep(0.7 + SLEEP_DELTA)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.RIGHT))
-        time.sleep(0.7)
+        time.sleep(0.7 + SLEEP_DELTA)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.RIGHT))
-        time.sleep(0.7)
+        time.sleep(0.7 + SLEEP_DELTA)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.7)
+        time.sleep(0.7 + SLEEP_DELTA)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(3)
+        time.sleep(3 + SLEEP_DELTA)
 
     def throw_additional_ultra_ball():
         slot.abort_if_frozen()
-        time.sleep(0.7)
+        time.sleep(0.7 + SLEEP_DELTA)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.7)
+        time.sleep(0.7 + SLEEP_DELTA)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.7)
+        time.sleep(0.7 + SLEEP_DELTA)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(3)
+        time.sleep(3 + SLEEP_DELTA)
 
     def is_caught():
         slot.abort_if_frozen()
@@ -237,13 +289,13 @@ def attempt(slot: InstanceSlot):
 
     def finish_battle_messages():
         slot.abort_if_frozen()
-        time.sleep(0.7)
+        time.sleep(0.7 + SLEEP_DELTA)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.7)
+        time.sleep(0.7 + SLEEP_DELTA)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.DOWN))
-        time.sleep(0.7)
+        time.sleep(0.7 + SLEEP_DELTA)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(2.7)
+        time.sleep(2.7 + SLEEP_DELTA)
 
     def attempt_pokemon_heal():
         # needed to move back from ultra ball
@@ -251,37 +303,37 @@ def attempt(slot: InstanceSlot):
         slot.abort_if_frozen()
         # Open START menu and move to and open BAG
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.START))
-        time.sleep(0.2)
+        time.sleep(0.2 + SLEEP_DELTA)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.DOWN))
-        time.sleep(0.2)
+        time.sleep(0.2 + SLEEP_DELTA)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.DOWN))
-        time.sleep(0.2)
+        time.sleep(0.2 + SLEEP_DELTA)
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-        time.sleep(0.2)
+        time.sleep(0.2 + SLEEP_DELTA)
         # Move back to ITEMS
         for _ in range(2):
             o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.LEFT))
-            time.sleep(0.2)
+            time.sleep(0.2 + SLEEP_DELTA)
         # Use FULL HEAL
         for _ in range(4):
             o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-            time.sleep(0.5)
+            time.sleep(0.5 + SLEEP_DELTA)
 
     def save_game():
         slot.abort_if_frozen()
         print(f"Saving game on {idx}")
-        time.sleep(2)
+        time.sleep(2 + SLEEP_DELTA)
         # Move back to START menu from BAG
         o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.B))
-        time.sleep(0.2)
+        time.sleep(0.2 + SLEEP_DELTA)
         # Move to SAVE
         for _ in range(2):
             o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.DOWN))
-            time.sleep(0.7)
+            time.sleep(0.7 + SLEEP_DELTA)
         # Save Game
         for _ in range(3):
             o.client.execute_event(KeyEvent(KeyEventType.PUSH, KeyType.A))
-            time.sleep(1)
+            time.sleep(1 + SLEEP_DELTA)
 
     start_game()
     set_initial_menu_cursor_position()
@@ -290,18 +342,15 @@ def attempt(slot: InstanceSlot):
         brief_zigzag()
         if entered_battle():
             while not dialogue_arrow_is_visible_on_screen():
-                time.sleep(0.4)
+                time.sleep(0.1 + SLEEP_DELTA)
             pokemon_name = get_wild_pokemon_name()
-            increment_encounter_count(pokemon_name)
-            if get_total_encounter_count() % 50 == 0:
-                print(f"Total Encounter Count: {get_total_encounter_count()}")
-                print(f"Encounter Counts: {for_console(encounter_counts)}")
             proceed_through_battle_intro_messages()
             if is_shiny_of_species(pokemon_name) and pokemon_name not in EXCLUDED_POKEMON:
                 shown_name = for_console(pokemon_name)
                 print(f"Shiny {shown_name} found on {idx} after {get_total_encounter_count()} total encounters and {encounter_counts[pokemon_name]} {shown_name} encounters")
                 pause_all = True
-                use_mean_look()
+                use_spore()
+                use_false_swipe()
                 throw_first_ultra_ball()
                 while not is_caught():
                     throw_additional_ultra_ball()
@@ -313,17 +362,22 @@ def attempt(slot: InstanceSlot):
                 if catch_count >= CATCH_LIMIT:
                     group.kill()
                     break
-                time.sleep(2)
+                time.sleep(2 + SLEEP_DELTA)
                 pause_all = False
                 start_game()
                 set_initial_menu_cursor_position()
             else:
                 run_away_from_battle()
+
+            increment_encounter_count(pokemon_name)
+            if get_total_encounter_count() % 50 == 0:
+                print(f"Total Encounter Count: {get_total_encounter_count()}")
+                print(f"Encounter Counts: {for_console(encounter_counts)}")
         else:
             continue
 
         while pause_all and not group.stop.is_set():
-            time.sleep(5)
+            time.sleep(5 + SLEEP_DELTA)
             if not pause_all:
                 start_game()
                 set_initial_menu_cursor_position()
@@ -331,6 +385,6 @@ def attempt(slot: InstanceSlot):
                 break
 
 """Putting it all together and running it"""
-group = InstanceGroup(NUM_INSTANCES, POKEMON_RED_ROM, starting_port=STARTING_PORT)
-group.start(fast_forward=True)
+group = InstanceGroup(NUM_INSTANCES, POKEMON_RED_ROM, starting_port=STARTING_PORT, exe=MGBA_SDL)
+group.start(fast_forward=True, minimize=True)
 group.run(attempt)

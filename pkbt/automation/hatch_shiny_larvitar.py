@@ -1,10 +1,10 @@
 from pkbt.actions import start_game_and_proceed_to_overworld, pick_up_egg, walk_down_one_step_from_old_man, equip_bike_after_egg_pickup, zigzag_until_hatching_dialogue, watch_hatching_and_decline_nickname, open_pokemon_summary_of_last_party_member, save_game_from_summary
 from pkbt.config import MGBA_SDL, POKEMON_RED_ROM
-from pkbt.image_processing import summary_sprite_is_shiny
+from pkbt.screen.image_processing import summary_sprite_is_shiny
 from pkbt.audio import play_success
 from pkbt.egg_report import EggReport
-from pkbt.instances import InstanceGroup, InstanceSlot
-from pkbt.species import SPECIES
+from pkbt.session.instances import InstanceGroup, InstanceSlot
+from pkbt.screen.species import SPECIES
 
 # Tweak as needed
 POKEMON_SPECIES = SPECIES["LARVITAR"]

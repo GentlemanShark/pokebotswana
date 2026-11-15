@@ -1,7 +1,7 @@
 import subprocess
 from typing import Callable
-from pkbt.emulator import EmulatorProc
-from pkbt.mgba_connection import MGBAConnection
+from pkbt.session.emulator import EmulatorProc
+from pkbt.session.mgba_connection import MGBAConnection
 
 class Orchestrator:
 
@@ -27,8 +27,8 @@ class Orchestrator:
 
 if __name__ == "__main__":
 
-    from pkbt.mgba_connection import MGBAConnection
-    from pkbt.emulator import EmulatorProc
+    from pkbt.session.mgba_connection import MGBAConnection
+    from pkbt.session.emulator import EmulatorProc
     from pkbt.config import POKEMON_RED_ROM, SERVER_SCRIPT, MGBA_DEV, INPUT_DISPLAY_SCRIPT
     import time
     from pkbt.input.key_event import KeyEvent

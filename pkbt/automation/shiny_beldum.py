@@ -6,15 +6,15 @@
 """
 
 from pkbt.config import POKEMON_EMERALD_ROM
-from pkbt.orchestrator import Orchestrator
-from pkbt.input.key_event import KeyEventType
-from pkbt.input.key_type import KeyType
+from pkbt.session.orchestrator import Orchestrator
 from pkbt.input.key_event import KeyEvent
-from pkbt.emulator import EmulatorProc
-from pkbt.mgba_connection import MGBAConnection
+from pkbt.input.key_event_type import KeyEventType
+from pkbt.input.key_type import KeyType
+from pkbt.session.emulator import EmulatorProc
+from pkbt.session.mgba_connection import MGBAConnection
 from pkbt.config import MGBA_DEV, SERVER_SCRIPT, SESSION_DIR
-from pkbt.windowing import Window, arrange_windows_auto_grid, minimize_windows_starting_with, get_primary_screen_width
-from pkbt.image_processing import pixel_hex
+from pkbt.session.windowing import Window, arrange_windows_auto_grid, minimize_windows_starting_with, get_primary_screen_width
+from pkbt.screen.image_processing import pixel_hex
 from pkbt.audio import play_success
 import time
 import threading

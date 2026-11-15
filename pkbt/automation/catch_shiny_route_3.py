@@ -1,12 +1,12 @@
 from pkbt.config import POKEMON_RED_ROM
-from pkbt.input.key_event import KeyEventType
-from pkbt.input.key_type import KeyType
 from pkbt.input.key_event import KeyEvent
-from pkbt.image_processing import pixel_hex_when_ready, dialogue_arrow_is_visible, debug_shot
-from pkbt.text import FULL_DIALOGUE_BOX, PLAYER_PKMN_STATUS_BOX, read_text
+from pkbt.input.key_event_type import KeyEventType
+from pkbt.input.key_type import KeyType
+from pkbt.screen.image_processing import pixel_hex_when_ready, dialogue_arrow_is_visible
+from pkbt.screen.text import FULL_DIALOGUE_BOX, PLAYER_PKMN_STATUS_BOX, read_text
 from pkbt.audio import play_success
-from pkbt.instances import InstanceGroup, InstanceSlot, slot_dir
-from pkbt.species import SPECIES
+from pkbt.session.instances import InstanceGroup, InstanceSlot, slot_dir
+from pkbt.screen.species import SPECIES
 from pkbt.console import for_console
 import time
 import threading
@@ -22,27 +22,27 @@ BATTLE_SCREEN_DIALOGUE_BG_HEX = "#29526b"
 BATTLE_SCREEN_CAUGHT_BG_CROSSHAIR = (220, 130)
 BATTLE_SCREEN_CAUGHT_BG_HEX = "#29526b"
 
-EXCLUDED_POKEMON = ["ZUBAT"]
-# The number of shiny pokemon to catch before the bot stops
-CATCH_LIMIT = 4
+"""Pokemon included here will NOT be checked for shiny"""
+EXCLUDED_POKEMON = ["PIDGEY", "SPEAROW", "MANKEY"]
 
 """Shared thread-safe variables"""
 encounter_counts = {
-    "ZUBAT": 0,
-    "GEODUDE": 0,
-    "CLEFAIRY": 0,
-    "PARAS": 0,
+    "NIDORAN♂": 0,
+    "NIDORAN♀": 0,
+    "SPEAROW": 0,
+    "MANKEY": 0,
+    "PIDGEY": 0,
+    "JIGGLYPUFF": 0,
+    "UNKNOWN": 0,
 }
 runs_lock = threading.Lock()
-pause_all = False
-catch_count = 0
+stop_all = False
 
 def attempt(slot: InstanceSlot):
     o = slot.orch
     idx = slot.idx
     global encounter_counts
-    global pause_all
-    global catch_count
+    global stop_all
 
     def start_game():
         slot.abort_if_frozen()
@@ -146,16 +146,7 @@ def attempt(slot: InstanceSlot):
     def increment_encounter_count(pokemon_name: str):
         slot.abort_if_frozen()
         if pokemon_name not in encounter_counts:
-            shown_name = for_console(pokemon_name).strip() or "UNKNOWN"
-            filename = "".join(c if c not in '<>:"/\\|?*' else "_" for c in shown_name) + ".png"
-            print(f"[{idx}] Unrecognized pokemon name: {shown_name}")
-            path, lua_name = debug_shot(filename)
-            pixel_hex_when_ready(
-                path,
-                0,
-                0,
-                lambda: o.client.save_screenshot_to_file(lua_name),
-            )
+            print(f"[{idx}] Unrecognized pokemon name: {for_console(pokemon_name)}")
             encounter_counts["UNKNOWN"] += 1
         else:
             encounter_counts[pokemon_name] += 1
@@ -283,8 +274,8 @@ def attempt(slot: InstanceSlot):
 
     start_game()
     set_initial_menu_cursor_position()
-    # equip_bike()
-    while not group.stop.is_set():
+    equip_bike()
+    while not stop_all:
         brief_zigzag()
         if entered_battle():
             while not dialogue_arrow_is_visible_on_screen():
@@ -298,7 +289,7 @@ def attempt(slot: InstanceSlot):
             if is_shiny_of_species(pokemon_name) and pokemon_name not in EXCLUDED_POKEMON:
                 shown_name = for_console(pokemon_name)
                 print(f"Shiny {shown_name} found on {idx} after {get_total_encounter_count()} total encounters and {encounter_counts[pokemon_name]} {shown_name} encounters")
-                pause_all = True
+                stop_all = True
                 use_mean_look()
                 throw_first_ultra_ball()
                 while not is_caught():
@@ -307,26 +298,12 @@ def attempt(slot: InstanceSlot):
                 attempt_pokemon_heal()
                 save_game()
                 play_success(blocking=True)
-                catch_count += 1
-                if catch_count >= CATCH_LIMIT:
-                    group.kill()
-                    break
-                time.sleep(2)
-                pause_all = False
-                start_game()
-                set_initial_menu_cursor_position()
+                group.stop.set()
+                break
             else:
                 run_away_from_battle()
         else:
             continue
-
-        while pause_all and not group.stop.is_set():
-            time.sleep(5)
-            if not pause_all:
-                start_game()
-                set_initial_menu_cursor_position()
-                # equip_bike()
-                break
 
 """Putting it all together and running it"""
 group = InstanceGroup(NUM_INSTANCES, POKEMON_RED_ROM, starting_port=STARTING_PORT)

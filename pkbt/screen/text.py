@@ -12,7 +12,7 @@ from PIL import Image, ImageOps
 from pkbt.assert_log import duplicate_failed_screenshot
 from pkbt.config import TESSDATA_DIR, TESSERACT
 from pkbt.console import for_console
-from pkbt.instances import InstanceSlot, slot_dir
+from pkbt.session.instances import InstanceSlot, slot_dir
 
 pytesseract.pytesseract.tesseract_cmd = TESSERACT
 LANG = "pkmngba_en"
