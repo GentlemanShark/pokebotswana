@@ -177,9 +177,9 @@ def attempt(slot: InstanceSlot):
 
     def is_shiny_of_species(pokemon_name: str):
         slot.abort_if_frozen()
-        species = SPECIES[pokemon_name]
-        pokemon_hex = capture_pixel(species.summary.crosshair[0], species.summary.crosshair[1])
-        is_shiny = pokemon_hex != species.summary.normal_hex
+        summary = SPECIES[pokemon_name].require_summary()
+        pokemon_hex = capture_pixel(summary.crosshair[0], summary.crosshair[1])
+        is_shiny = pokemon_hex != summary.normal_hex
         if is_shiny:
             stamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S.%f")[:-3]
             filename = f"shiny-porygon-{idx}-{stamp}.png"

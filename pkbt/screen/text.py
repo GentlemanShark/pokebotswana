@@ -124,7 +124,7 @@ def _prepare(image: Image.Image, box: tuple[int, int, int, int]) -> Image.Image:
 def assert_on_continue_screen(slot: InstanceSlot, timeout=2.0) -> None:
     """Raise if the player is not on the continue screen.
     """
-    continue_text = capture_screenshot_and_read_text(slot, [23, 12, 76, 22], timeout)
+    continue_text = capture_screenshot_and_read_text(slot, (23, 12, 76, 22), timeout)
     if continue_text != "CONTINUE":
         duplicate_failed_screenshot(slot.idx, assert_on_continue_screen.__name__)
         raise Exception(f'Failed {assert_on_continue_screen.__name__}. CONTINUE text is "{for_console(continue_text)}" instead of expected "CONTINUE"')

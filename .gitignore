@@ -35,3 +35,6 @@ venv312/
 env/
 .venv/
 .env/
+
+# Editor
+.vscode/

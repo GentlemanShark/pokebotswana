@@ -12,6 +12,16 @@ class Species:
     summary: SpriteCheck | None = None
     other_names: list[str] | None = None
 
+    def require_wild(self) -> SpriteCheck:
+        if self.wild is None:
+            raise ValueError("Species has no wild sprite check")
+        return self.wild
+
+    def require_summary(self) -> SpriteCheck:
+        if self.summary is None:
+            raise ValueError("Species has no summary sprite check")
+        return self.summary
+
 SPECIES = {
     "ABRA": Species(
         wild=SpriteCheck(
